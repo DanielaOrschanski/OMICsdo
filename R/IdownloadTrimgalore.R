@@ -1,0 +1,79 @@
+#' @title downloadTrimGalore
+#' @description Downloads and decompresses the TrimGalore software
+#' @return The path where the .exe file is located
+#' @export
+IdownloadTrimGalore <- function() {
+
+  soft_directory <- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
+  tryCatch(
+    expr = {
+      softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+      linea_software <- grep("(?i)TrimGalore", softwares, ignore.case = TRUE, value = TRUE)
+
+      if(length(nchar(linea_software))==0) {
+        TrimGalore <<- NULL
+      } else {
+        TrimGalore <<- strsplit(linea_software, " ")[[1]][[2]]
+      }
+
+      system2(TrimGalore, "--help")
+      meesage("TrimGalore was already downloaded")
+      return(TrimGalore)
+    },
+    error = function(e) {
+      # En caso de haberlo descargado y hay algun problema con el ejecutable, eliminamos y descargamos de nuevo
+      if (file.exists(sprintf('%s/TrimGalore', soft_directory))) {
+        system2("rm", sprintf('-r %s/TrimGalore', soft_directory))
+        print("There is a problem with the TrimGalore exe file. It will be removed and download again")
+      }
+
+      message("TrimGalore download and installation is about to begin...
+              Please be patient, it may take a while.")
+      print(e)
+
+      tryCatch(
+        expr = {
+          # Primero hay que verificar que este descargado FastQC y Cutadapt.
+          downloadFastQC()
+
+          # Proceso de Descarga de TrimGalore
+          dir.create(sprintf("%s/TrimGalore", soft_directory))
+          URL <- "https://github.com/FelixKrueger/TrimGalore/archive/0.6.10.tar.gz"
+          setwd(sprintf("%s/TrimGalore", soft_directory))
+          system2("wget" ,sprintf("https://github.com/FelixKrueger/TrimGalore/archive/0.6.10.tar.gz -O trim_galore.tar.gz"), wait = TRUE, stdout = NULL, stderr = NULL)
+          system2("tar", "xvzf trim_galore.tar.gz")
+
+          TrimGalore <<- sprintf("%s/TrimGalore/TrimGalore-0.6.10/trim_galore", soft_directory)
+          system2(TrimGalore, "--help")
+
+          # En caso de que la descarga haya sido exitosa, agregamos el path al archivo TXT
+          softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+          if(length(nchar(softwares[-grep("TrimGalore", softwares, ignore.case = TRUE)])) != 0 ) {
+            softwares <- softwares[-grep("TrimGalore", softwares, ignore.case = TRUE)]
+          }
+          softwares_actualizado <- c(softwares, sprintf("TrimGalore %s", TrimGalore))
+          write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+
+          return(TrimGalore)
+        },
+
+        error = function(e) {
+          message("An error occured while performing the TrimGalore download and installation.
+      Please remember that some packages are required and you must download them by yourself.
+On the Linux command-line print:
+------------------------------------------------------
+    sudo apt install cutadapt wget tar
+------------------------------------------------------")
+          print(e)
+        },
+
+        finally = {
+          message("-.Message from TrimGalore")
+        }
+      )
+    },
+    finally = {
+      message("TrimGalore download and installation completed successfully")
+    }
+  )
+}
