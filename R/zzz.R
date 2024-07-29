@@ -1,4 +1,7 @@
 .onLoad <- function(libname, pkgname) {
+
+  # HOLAAAA CAMBIE ESTO""""""""""""""""
+
   message("ESTOY EN EL ONLOAD")
 
   libPath <- dirname(system.file(package = "OMICsdo"))
