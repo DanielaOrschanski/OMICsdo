@@ -1,0 +1,7 @@
+
+FastQC /home/daniela/R/x86_64-pc-linux-gnu-library/4.2/OMICsdoSof/FastQC/FastQC/fastqc
+STAR /home/daniela/R/x86_64-pc-linux-gnu-library/4.2/OMICsdoSof/STAR/STAR-2.7.11a/bin/Linux_x86_64_static/STAR
+HG38Annotation /home/daniela/R/x86_64-pc-linux-gnu-library/4.2/OMICsdoSof/HG38/Homo_sapiens.GRCh38.110.gtf
+HG38FASTA /home/daniela/R/x86_64-pc-linux-gnu-library/4.2/OMICsdoSof/HG38/Homo_sapiens.GRCh38.dna_sm.primary_assembly.fa
+ARRIBA /home/daniela/R/x86_64-pc-linux-gnu-library/4.2/OMICsdoSof/Arriba/arriba_v2.4.0/arriba
+TrimGalore /home/daniela/R/x86_64-pc-linux-gnu-library/4.2/OMICsdoSof/TrimGalore/TrimGalore-0.6.10/trim_galore

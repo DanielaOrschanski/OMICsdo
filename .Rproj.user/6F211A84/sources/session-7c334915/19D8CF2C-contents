@@ -1,0 +1,11 @@
+#' @title insert Path to Soft
+#' @description It saves the path of a software in the path_to_soft.txt file in OMICs library.
+#' @param software_name name of the software you want to save.
+#' @param path path of the executable of the software already installed.
+
+insertPathtoSoft <- function(software_name, path) {
+  softwares <- readLines(sprintf("%s/OMICsSoft/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
+  softwares_actualizado <- c(softwares, sprintf("%s %s", software_name, path))
+  write(softwares_actualizado, file = sprintf("%s/OMICsSoft/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
+  message(sprintf("The path of the software %s has been saved in path_to_soft.txt", software_name))
+}

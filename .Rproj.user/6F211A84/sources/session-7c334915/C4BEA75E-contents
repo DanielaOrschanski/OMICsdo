@@ -1,0 +1,43 @@
+#' @title RNAseqProcess
+#' @description Executes the
+#' @param patient_dir Path of the directory that contains R1 and R2 fastq files. It can be either the "trimmed" folder or the original folder.
+
+RNAseqProcess <- function(patients_dir,
+                          fastQC_after_trim = TRUE,
+                          RunARRIBA = TRUE,
+                          RunFeatureCounts = TRUE,
+                          RunHLA = TRUE
+                          ) {
+
+  file_list <- list.files(patients_dir)
+
+  for (patient in file_list) {
+    patient_dir <- sprintf("%s/%s", patients_dir, patient)
+    RunFastQC(patient_dir)
+    patient_dir_trim <- RunTrimgalore(patient_dir)
+
+    if(fastQC_after_trim == TRUE) {
+      RunFastQC(patient_dir_trim)
+    }
+
+    RunSTAR(patient_dir_trim)
+
+    if(RunARRIBA == TRUE) {
+      RunARRIBA(patient_dir_trim)
+    }
+
+  }
+
+  plotFastQC_PBSQ(patients_dir)
+
+  if(fastQC_after_trim == TRUE) {
+    plotFastQC_PBSQ(patients_dir_trim)
+  }
+
+  if(RunFeatureCounts == TRUE) {
+    FC.object <- RunFeatureCounts(patients_dir)
+  }
+
+
+
+}

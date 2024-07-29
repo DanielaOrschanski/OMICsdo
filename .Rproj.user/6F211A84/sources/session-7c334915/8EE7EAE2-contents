@@ -1,0 +1,492 @@
+.onLoad <- function(libname, pkgname) {
+
+  libPath <- dirname(system.file(package = "OMICsdo"))
+  print(libPath)
+
+  libPath <- Sys.getenv('R_LIBS_USER')
+  #Folder where the softwares will be saved
+  if(!(file.exists(sprintf("%s/OMICsdoSof", libPath)))) {
+    dir.create(sprintf("%s/OMICsdoSof", libPath))
+  }
+
+  omics_sof <- sprintf("%s/OMICsdoSof", libPath)
+
+  if (!(file.exists(sprintf("%s/OMICsdoSof/path_to_soft.txt", libPath)))) { #Solo en instalacion
+    write("",file = sprintf("%s/OMICsdoSof/path_to_soft.txt", libPath))
+  }
+
+  check_packages()
+
+  downloadFastQC()
+  downloadTrimGalore()
+  downloadHG38()
+  downloadSTAR()
+  downloadArriba()
+
+}
+
+check_packages <- function() {
+
+  if (!requireNamespace("openxlsx", quietly = TRUE)) {
+    remotes::install_cran("openxlsx")
+  }
+  library(openxlsx)
+  if (!requireNamespace("stringr", quietly = TRUE)) {
+    remotes::install_cran("stringr")
+  }
+  library(stringr)
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    remotes::install_cran("ggplot2")
+  }
+  library(ggplot2)
+
+  if (!requireNamespace("tibble", quietly = TRUE)) {
+    remotes::install_cran("tibble")
+  }
+  library(tibble)
+
+  if (!requireNamespace("tidyverse", quietly = TRUE)) {
+    remotes::install_cran("tidyverse")
+  }
+  library(tidyverse)
+
+  if (!requireNamespace("showtext", quietly = TRUE)) {
+    remotes::install_cran("showtext")
+  }
+
+  library(showtext)
+  if (!requireNamespace("dplyr", quietly = TRUE)) {
+    remotes::install_cran("dplyr")
+  }
+  library(dplyr)
+
+  if (!requireNamespace("ggtext", quietly = TRUE)) {
+    remotes::install_cran("ggtext")
+  }
+  library(ggtext)
+
+  if (!requireNamespace("readxl", quietly = TRUE)) {
+    remotes::install_cran("readxl")
+  }
+  library(readxl)
+
+  if (!requireNamespace("magrittr", quietly = TRUE)) {
+    remotes::install_cran("magrittr")
+  }
+  library(magrittr)
+
+  if (!requireNamespace("httr", quietly = TRUE)) {
+    remotes::install_cran("httr")
+  }
+  library(httr)
+
+  if (!requireNamespace("Rsamtools", quietly = TRUE)) {
+    remotes::install_cran("Rsamtools")
+  }
+  library(Rsamtools)
+
+  if (!requireNamespace("viridis", quietly = TRUE)) {
+    install.packages("viridis")
+  }
+  library(viridis)
+
+  if (!requireNamespace("reshape2", quietly = TRUE)) {
+    install.packages("reshape2")
+  }
+  library(reshape2)
+
+
+  message("The R packages required have been successfully installed")
+}
+
+#' @title downloadFastQC
+#' @description Downloads and decompresses the FastQC software
+#' @return The path where the .exe file is located
+downloadFastQC <- function(soft_directory = sprintf("%s/OMICsdoSof", Sys.getenv('R_LIBS_USER'))) {
+  tryCatch(
+    expr = {
+      softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
+      linea_software <- grep("(?i)FastQC", softwares, ignore.case = TRUE, value = TRUE)
+      FastQC <<- strsplit(linea_software, " ")[[1]][[2]]
+      system2(FastQC, "--help")
+
+      message("FastQC was already downloaded")
+      #return(FastQC)
+    },
+    error = function(e) {
+      message("FastQC download and installation is about to begin...
+              Please be patient, it may take a while.")
+      print(e)
+
+      # En caso de haberlo descargado y hay algun problema con el ejecutable,
+      # eliminamos y descargamos de nuevo
+      if (file.exists(sprintf('%s/FastQC', soft_directory))) {
+        system2("rm", sprintf('-r %s/FastQC', soft_directory))
+      }
+
+      tryCatch(
+        expr = {
+          # Proceso de Descarga de FastQC
+          dir.create(sprintf("%s/FastQC", soft_directory))
+          setwd(sprintf("%s/FastQC", soft_directory))
+          URL <- ("https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.1.zip")
+
+          system2("wget", URL, wait = TRUE, stdout = NULL, stderr = NULL)
+
+          file <- basename(URL)
+          file_dir <- file.path(sprintf("%s/FastQC", soft_directory), file)
+          filedc <- substr(file, start = 0, stop = (nchar(file) - 4))
+
+          # Descomprimo y elimino el ZIP
+          system2("unzip", sprintf("%s -d %s/FastQC", file_dir, soft_directory), wait = TRUE)
+          system2("rm", file_dir)
+
+          # Definicion de la variable FastQC con el ejecutable
+          FastQC <<- sprintf('%s/FastQC/FastQC/fastqc', soft_directory)
+          system2(FastQC, "--help")
+
+          # En caso de que la descarga haya sido exitosa, agregamos el path al archivo TXT
+          softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
+
+          if(length(nchar(softwares[-grep("FastQC", softwares, ignore.case = TRUE)])) != 0 ) {
+            softwares <- softwares[-grep("FastQC", softwares, ignore.case = TRUE)]
+          }
+          softwares_actualizado <- c(softwares, sprintf("FastQC %s", FastQC))
+          # Reescribimos el archivo
+          write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
+
+
+          message("FastQC download and installation completed successfully")
+
+          return(FastQC)
+        },
+        error = function(e) {
+          message("An error occured while performing the FastQC download and installation.
+      Please remember that some packages are required and you must download them by yourself.
+On the Linux command-line print:
+------------------------------------------------------
+    sudo apt install wget unzip
+------------------------------------------------------")
+          print(e)
+        },
+
+        finally = {
+          message("-.Message from FastQC")
+        }
+      )
+    }
+
+  )
+}
+
+######################################################################
+######################################################################
+#' @title downloadTrimGalore
+#' @description Downloads and decompresses the TrimGalore software
+#' @return The path where the .exe file is located
+
+downloadTrimGalore <- function(soft_directory = sprintf("%s/OMICsdoSof", Sys.getenv('R_LIBS_USER'))) {
+  tryCatch(
+    expr = {
+      softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
+      linea_software <- grep("(?i)TrimGalore", softwares, ignore.case = TRUE, value = TRUE)
+      TrimGalore <<- strsplit(linea_software, " ")[[1]][[2]]
+
+      system2(TrimGalore, "--help")
+      meesage("TrimGalore was already downloaded")
+      return(TrimGalore)
+    },
+    error = function(e) {
+      # En caso de haberlo descargado y hay algun problema con el ejecutable, eliminamos y descargamos de nuevo
+      if (file.exists(sprintf('%s/TrimGalore', soft_directory))) {
+        system2("rm", sprintf('-r %s/TrimGalore', soft_directory))
+        print("There is a problem with the TrimGalore exe file. It will be removed and download again")
+      }
+
+      message("TrimGalore download and installation is about to begin...
+              Please be patient, it may take a while.")
+      print(e)
+
+      tryCatch(
+        expr = {
+          # Primero hay que verificar que este descargado FastQC y Cutadapt.
+          downloadFastQC(soft_directory)
+
+          # Proceso de Descarga de TrimGalore
+          dir.create(sprintf("%s/TrimGalore", soft_directory))
+          URL <- "https://github.com/FelixKrueger/TrimGalore/archive/0.6.10.tar.gz"
+          setwd(sprintf("%s/TrimGalore", soft_directory))
+          system2("wget" ,sprintf("https://github.com/FelixKrueger/TrimGalore/archive/0.6.10.tar.gz -O trim_galore.tar.gz"), wait = TRUE, stdout = NULL, stderr = NULL)
+          system2("tar", "xvzf trim_galore.tar.gz")
+
+          TrimGalore <<- sprintf("%s/TrimGalore/TrimGalore-0.6.10/trim_galore", soft_directory)
+          system2(TrimGalore, "--help")
+
+          # En caso de que la descarga haya sido exitosa, agregamos el path al archivo TXT
+          softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
+          if(length(nchar(softwares[-grep("TrimGalore", softwares, ignore.case = TRUE)])) != 0 ) {
+            softwares <- softwares[-grep("TrimGalore", softwares, ignore.case = TRUE)]
+          }
+          softwares_actualizado <- c(softwares, sprintf("TrimGalore %s", TrimGalore))
+          write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
+
+          return(TrimGalore)
+        },
+
+        error = function(e) {
+          message("An error occured while performing the TrimGalore download and installation.
+      Please remember that some packages are required and you must download them by yourself.
+On the Linux command-line print:
+------------------------------------------------------
+    sudo apt install cutadapt wget tar
+------------------------------------------------------")
+          print(e)
+        },
+
+        finally = {
+          message("-.Message from TrimGalore")
+        }
+      )
+    },
+    finally = {
+      message("TrimGalore download and installation completed successfully")
+    }
+  )
+}
+##############################################################################
+##############################################################################
+#' @title downloadSTAR
+#' @description Downloads and decompresses the GATK software
+#' @return The path where the .exe file is located
+downloadSTAR <- function(soft_directory = sprintf("%s/OMICsdoSof", Sys.getenv('R_LIBS_USER'))) {
+
+  tryCatch(
+    expr = {
+
+      softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
+      #Para que sea insensible a las mayusculas o minusculas se pone el (?i)
+      linea_software <- grep("(?i)STAR", softwares, ignore.case = TRUE, value = TRUE)
+      STAR <<- strsplit(linea_software, " ")[[1]][[2]]
+
+      system2(STAR, "--help")
+      return(STAR)
+    },
+    error = function(e) {
+      # En caso de haberlo descargado y hay algun problema con el ejecutable,
+      # eliminamos y descargamos de nuevo
+      if (file.exists(sprintf('%s/STAR', soft_directory))) {
+        system2("rm", sprintf('-r %s/STAR', soft_directory))
+        print("There is a problem with the STAR exe file. It will be removed and download again")
+      }
+
+      message("STAR download and installation is about to begin...
+              Please be patient, it may take a while.")
+      print(e)
+
+      tryCatch(
+        expr = {
+          # Proceso de Descarga de STAR
+          dir.create(sprintf("%s/STAR", soft_directory))
+          URL <- "https://github.com/alexdobin/STAR/archive/2.7.11a.tar.gz"
+          version <- sub("\\.tar\\.gz$", "", basename(URL))
+          dir <- sprintf("%s/STAR", soft_directory)
+          setwd(dir)
+          # Get latest STAR source from releases
+          system2("wget", args = c(URL, "-P", dir), wait = TRUE, stdout = NULL, stderr = NULL)
+          system2("tar", sprintf("-xzf %s.tar.gz", version))
+          # Compile
+          setwd(sprintf("%s/STAR-%s/source", dir, version))
+          system2("make", "STAR")
+
+          # Definimos la variable de STAR con su ejecutable
+          STAR <<- sprintf("%s/STAR/STAR-2.7.11a/bin/Linux_x86_64_static/STAR", soft_directory)
+          system2(STAR, "--help")
+
+          # En caso de que la descarga haya sido exitosa, agregamos el path al archivo TXT
+          softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
+          softwares_actualizado <- c(softwares, sprintf("STAR %s", STAR))
+          write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
+
+          return(STAR)
+        },
+
+        error = function(e) {
+          message("An error occured while performing the STAR download and installation.
+      Please remember that some packages are required and you must download them by yourself.
+On the Linux command-line print:
+------------------------------------------------------
+    sudo apt install wget tar
+------------------------------------------------------")
+          print(e)
+        },
+
+        finally = {
+          message("-.Message from STAR")
+        }
+      )
+    },
+    finally = {
+      message("STAR download and installation completed successfully")
+    }
+  )
+}
+
+############################################################################
+#########################################################################333
+
+#' @title downloadHG38
+#' @description Downloads the FASTA and the annotation of the genome reference version HG38.
+#' @return Paths of FASTA and GTF(annotation) from the genome reference.
+#' @import GEOquery
+downloadHG38 <- function() {
+  soft_directory <- sprintf("%s/OMICsdoSof", Sys.getenv('R_LIBS_USER'))
+
+  #Chequea si ya está descargado
+  if(!(file.exists(sprintf("%s/HG38", soft_directory)))) {
+
+    dir.create(sprintf("%s/HG38", soft_directory))
+    URL <- "https://ftp.ensembl.org/pub/release-110/gtf/homo_sapiens/Homo_sapiens.GRCh38.110.gtf.gz"
+    dir <- sprintf("%s/HG38", soft_directory)
+    setwd(dir)
+    system2("wget", args = c(URL, "-P", dir), wait = TRUE, stdout = NULL, stderr = NULL)
+
+
+    URL <- "https://ftp.ensembl.org/pub/release-110/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna_sm.primary_assembly.fa.gz"
+    system2("wget", args = c(URL, "-P", dir), wait = TRUE, stdout = NULL, stderr = NULL)
+
+    AnnotationHG38 <- sprintf("%s/HG38/Homo_sapiens.GRCh38.110.gtf.gz", soft_directory)
+    FastaHG38 <- sprintf("%s/HG38/Homo_sapiens.GRCh38.dna_sm.primary_assembly.fa.gz", soft_directory)
+
+    gunzip(AnnotationHG38, destname = gsub("[.]gz$", "", AnnotationHG38), overwrite = FALSE, remove = TRUE)
+    gunzip(FastaHG38, destname = gsub("[.]gz$", "", FastaHG38), overwrite = FALSE, remove = TRUE)
+
+    AnnotationHG38 <<- sprintf("%s/HG38/Homo_sapiens.GRCh38.110.gtf", soft_directory)
+    FastaHG38 <<- sprintf("%s/HG38/Homo_sapiens.GRCh38.dna_sm.primary_assembly.fa", soft_directory)
+
+    #Writes down the paths in the txt
+    softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
+    softwares_actualizado <- c(softwares, sprintf("HG38Annotation %s", AnnotationHG38), sprintf("HG38FASTA %s", FastaHG38))
+    write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
+
+  } else {
+    message("The genome reference HG38 was already downloadaed")
+    softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
+    linea_software <- grep("HG38Annotation", softwares, ignore.case = TRUE, value = TRUE)
+    AnnotationHG38 <<- strsplit(linea_software, " ")[[1]][[2]]
+    linea_software <- grep("HG38FASTA", softwares, ignore.case = TRUE, value = TRUE)
+    FastaHG38 <<- strsplit(linea_software, " ")[[1]][[2]]
+  }
+
+  index_dir <- indexRefSTAR(AnnotationHG38, FastaHG38)
+
+  return(c(AnnotationHG38, FastaHG38, index_dir))
+
+}
+
+
+indexRefSTAR <- function(AnnotationHG38, FastaHG38) {
+
+  soft_directory = sprintf("%s/OMICsdoSof", Sys.getenv('R_LIBS_USER'))
+
+  if(file.exists(sprintf("%s/HG38/index", soft_directory))) {
+    message("The reference genome was already indexed")
+    return(sprintf("%s/HG38/index", soft_directory))
+  }
+
+  nThreads <- max(1,parallel::detectCores()-2)
+
+  log <- system2(command = STAR,
+                 args = c(paste0("--runThreadN ", nThreads),
+                          "--runMode genomeGenerate",
+                          paste0("--genomeDir " , sprintf("%s/HG38/index", soft_directory)),
+                          paste0("--genomeFastaFiles ", FastaHG38),
+                          "--sjdbOverhang 100 ",
+                          "--genomeSAindexNbases 12",
+                          paste0("--sjdbGTFfile ", AnnotationHG38)
+                 ), stdout = TRUE)#out.file)
+
+  return(sprintf("%s/HG38/index", soft_directory))
+
+}
+
+####################################################################
+######################################################################
+
+#' @title downloadArriba
+#' @description Downloads and decompresses the GATK software
+#' @return The path where the .exe file is located
+downloadArriba <- function() {
+  soft_directory <- sprintf("%s/OMICsdoSof", Sys.getenv('R_LIBS_USER'))
+
+  tryCatch(
+    expr = {
+      softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
+      linea_software <- grep("(?i)Arriba", softwares, ignore.case = TRUE, value = TRUE)
+      ARRIBA <<- strsplit(linea_software, " ")[[1]][[2]]
+
+      system2(ARRIBA, "-help")
+      return(ARRIBA)
+    },
+    error = function(e) {
+      # En caso de haberlo descargado y hay algun problema con el ejecutable,
+      # eliminamos y descargamos de nuevo
+      if (file.exists(sprintf('%s/Arriba', soft_directory))) {
+        system2("rm", sprintf('-r %s/Arriba', soft_directory))
+        print("There is a problem with the Arriba .exe file. It will be removed and download again")
+      }
+
+      message("Arriba download and installation is about to begin...
+              Please be patient, it may take a while.")
+      print(e)
+
+      tryCatch(
+        expr = {
+          # Proceso de Descarga de Arriba
+          dir.create(sprintf("%s/Arriba", soft_directory))
+          URL <- "https://github.com/suhrig/arriba/releases/download/v2.4.0/arriba_v2.4.0.tar.gz"
+          setwd(sprintf("%s/Arriba", soft_directory))
+
+          system2("wget" , URL, wait = TRUE, stdout = NULL, stderr = NULL)
+          system2("tar", "-xzf arriba_v2.4.0.tar.gz", wait = TRUE, stdout = NULL, stderr = NULL)
+          setwd(sprintf("%s/Arriba/arriba_v2.4.0", soft_directory))
+          system2("make", wait = TRUE, stdout = NULL, stderr = NULL)
+
+
+          ARRIBA <<- sprintf("%s/Arriba/arriba_v2.4.0/arriba", soft_directory)
+          system2(ARRIBA, "-help")
+
+          # En caso de ya existir el archivo, solamente agregamos el proximo path
+          softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
+          if (TRUE %in% grepl("ARRIBA", softwares, ignore.case = TRUE)) {
+            # En caso de haber dado error y se descargo de nuevo, tenemos que eliminar la linea del
+            # software anterior.
+            softwares <- softwares[-grep("Arriba", softwares, ignore.case = TRUE)]
+          }
+          # Agregamos la nueva linea con el software
+          softwares_actualizado <- c(softwares, sprintf("ARRIBA %s", ARRIBA))
+          write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
+
+          return(ARRIBA)
+        },
+
+        error = function(e) {
+          message("An error occured while performing the Arriba download and installation.
+      Please remember that some packages are required and you must download them by yourself.
+On the Linux command-line print:
+------------------------------------------------------
+    sudo apt install wget tar
+------------------------------------------------------")
+          print(e)
+        },
+
+        finally = {
+          message("-.Message from Arriba")
+        }
+      )
+    },
+    finally = {
+      message("Arriba download and installation completed successfully")
+    }
+  )
+}
+

@@ -1,0 +1,62 @@
+#' @title RNAseqP
+#' @description Executes the
+#' @param patient_dir Path of the directory that contains R1 and R2 fastq files. It can be either the "trimmed" folder or the original folder.
+#' @param fastQC_after_trim lfnrks
+#' @param RunARRIBA kvsfj
+#' @param RunFeatureCounts vshbfj
+#' @param RunHLA kvsjhbfj
+#' @export
+RNAseqP <- function(patients_dir,
+                          fastQC_after_trim = TRUE,
+                          RunARRIBA = TRUE,
+                          RunFeatureCounts = TRUE,
+                          RunHLA = TRUE
+) {
+
+  #patients_dir <- "~/EnvironChile/Muestras"
+  downloadHG38()
+  file_list <- list.dirs(path = patients_dir, full.names = FALSE, recursive = FALSE)
+
+  #Functions applied to each patient one by one
+  for (patient in file_list) {
+    patient_dir <- sprintf("%s/%s", patients_dir, patient)
+    runFastQC(patient_dir)
+    message(sprintf("The patient %s has already been processed with FastQC", patient))
+
+    #Returns trimmed folder inside patient's folder
+    patient_dir_trim <- runTrimgalore(patient_dir)
+    message(sprintf("The patient %s has already been processed with TrimGalore", patient))
+
+
+    if(fastQC_after_trim == TRUE) {
+      runFastQC(patient_dir_trim)
+      message(sprintf("The patient %s's trimmed file has already been processed with FastQC", patient))
+
+    }
+
+    #patient_dir_trim <- "~/EnvironChile/Muestras/Co1109/trimmed"
+    runSTAR(patient_dir_trim)
+    message(sprintf("The patient %s has already been processed with STAR", patient))
+
+
+    if(RunARRIBA == TRUE) {
+      runARRIBA(patient_dir_trim)
+      message(sprintf("The patient %s has already been processed with ARRIBA", patient))
+
+    }
+
+  }
+
+  #Functions applied to all the patients together:
+  plotFastQC_PBSQ(patients_dir, trimmed = FALSE)
+
+  if(fastQC_after_trim == TRUE) {
+    plotFastQC_PBSQ(patients_dir, trimmed = TRUE)
+  }
+
+  if(RunFeatureCounts == TRUE) {
+    FC.object <- runFeatureCounts(patients_dir)
+  }
+
+
+}

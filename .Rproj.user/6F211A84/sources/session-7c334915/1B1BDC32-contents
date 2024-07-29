@@ -1,0 +1,44 @@
+#seq running for multiple files
+STAR_hla.running <- function(ena, wdir) {
+  len <- length(ena)
+  for(z in 1:len){
+    fpair <- unlist(stringr::str_split(ena[z],";"))
+    file1 <- basename(fpair[1])
+    fdir <- unlist(stringr::str_split(file1,"_"))[1]
+    files.dir <- paste0(wdir, fdir, sep = "")
+    
+    #download files from url
+    for(i in 1:2){
+      fname <- basename(fpair[i])
+      if (!file.exists(files.dir)){
+        dir.create(files.dir)
+      }
+      if (!file.exists(paste0(files.dir, "/", fname, sep = ""))){
+        download.file(fpair[i], destfile = paste0(files.dir, "/", fname, sep = ""), method = "wget")
+      }
+    }
+    
+    #trim the download sequences
+    res.trim <- Aligners::RunTrimgalore(paste0(files.dir, "/", file1, sep = ""))
+    trim.file <- dir(path = files.dir, pattern = "*_val_1.fq*")
+    
+    #delete fastq
+    delfiles <- dir(path = files.dir, pattern = "\\.fastq.gz$")
+    file.remove(file.path(files.dir, delfiles))
+    
+    #run star and arriba from aligners and arribar library
+    bam.star <- ArribaR::RunSTARforARRIBA(paste0(files.dir, "/", trim.file, sep = ""))
+    ArribaR::RunARRIBA(bam.star)
+    
+    #run featureCounts
+    FC.object <- Rsubread::featureCounts(files = bam.star, annot.inbuilt = "hg38", juncCounts = TRUE, isPairedEnd = TRUE)
+    saveRDS(FC.object, file = paste0(files.dir, "/", fdir, "_FC.rds", sep = ""))
+    
+    #rename bam file
+    file.rename(paste0(files.dir, "/", fdir, "_STAR_Aligned_Aligned.out.bam", sep = ""), paste0(files.dir, "/", fdir, ".bam", sep = ""))
+    
+    #delete files generated from star
+    delfiles <- dir(path = files.dir, pattern = "*STAR*")
+    unlink(file.path(files.dir, delfiles), recursive = TRUE)
+  }
+}

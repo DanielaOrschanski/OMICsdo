@@ -1,0 +1,86 @@
+#' @title downloadMIXCR
+#' @description Downloads and decompresses the MIXCR software
+#' @return The path where the executable file is located
+#' @export
+downloadMIXCR <- function() {
+
+  soft_directory <- sprintf("%s/OMICsdoSof", Sys.getenv('R_LIBS_USER'))
+
+  tryCatch(
+    expr = {
+      softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
+      linea_software <- grep("(?i)MIXCR", softwares, ignore.case = TRUE, value = TRUE)
+      MIXCR <<- strsplit(linea_software, " ")[[1]][[2]]
+
+      system2(MIXCR, "-v")
+      return(MIXCR)
+    },
+    error = function(e) {
+      # En caso de haberlo descargado y hay algun problema con el ejecutable,
+      # eliminamos y descargamos de nuevo
+      if (file.exists(sprintf('%s/MIXCR', soft_directory))) {
+        system2("rm", sprintf('-r %s/MIXCR', soft_directory))
+        print("There is a problem with the MIXCR .exe file. It will be removed and download again")
+      }
+
+      message("Arriba download and installation is about to begin...
+              Please be patient, it may take a while.")
+      print(e)
+
+      tryCatch(
+        expr = {
+          # Proceso de Descarga de MIXCR
+          dir.create(sprintf("%s/MIXCR", soft_directory))
+          URL <- "https://github.com/milaboratory/mixcr/releases/download/v4.3.2/mixcr-4.3.2.zip"
+          setwd(sprintf("%s/MIXCR", soft_directory))
+
+          system2("wget" , URL, wait = TRUE, stdout = NULL, stderr = NULL)
+          system2("unzip", "mixcr-4.3.2.zip", wait = TRUE, stdout = NULL, stderr = NULL)
+
+          MIXCR <<- sprintf("%s/MIXCR/mixcr", soft_directory)
+          system2(MIXCR, "-v")
+
+          system2("export", "PATH=", MIXCR ,":$PATH", wait = TRUE, stdout = NULL, stderr = NULL)
+
+          #  agregamos el  path
+          softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
+          if (TRUE %in% grepl("MIXCR", softwares, ignore.case = TRUE)) {
+            # En caso de haber dado error y se descargo de nuevo, tenemos que eliminar la linea del
+            # software anterior.
+            softwares <- softwares[-grep("MIXCR", softwares, ignore.case = TRUE)]
+          }
+          # Agregamos la nueva linea con el software
+          softwares_actualizado <- c(softwares, sprintf("MIXCR %s", MIXCR))
+          write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
+
+          #LICENCIA
+          #/home/daniela/R/x86_64-pc-linux-gnu-library/4.2/OMICsdoSof/MIXCR/mixcr activate-license
+          #pongo licencia
+          #command <- shQuote(c(MIXCR, "activate-license"))
+
+          return(MIXCR)
+        },
+
+        error = function(e) {
+          message("An error occured while performing the Arriba download and installation.
+      Please remember that some packages are required and you must download them by yourself.
+On the Linux command-line print:
+------------------------------------------------------
+    sudo apt install wget unzip
+------------------------------------------------------")
+          print(e)
+        },
+
+        finally = {
+          message("-.Message from MIXCR")
+        }
+      )
+    },
+    finally = {
+      message("MIXCR download and installation completed successfully")
+    }
+  )
+}
+
+
+

@@ -1,0 +1,34 @@
+Analysis date: Mon Jan 08 08:48:33 ART 2024
+Input file(s): /home/daniela/EnvironChile/Muestras/Co1099/trimmed/MIXCR/Co1099.vdjca
+Output file(s): /home/daniela/EnvironChile/Muestras/Co1099/trimmed/MIXCR/Co1099.refined.vdjca
+Version: 4.3.2; built=Tue Apr 11 15:35:07 ART 2023; rev=123d699964; lib=repseqio.v2.2
+Command line arguments: refineTagsAndSort --report /home/daniela/EnvironChile/Muestras/Co1099/trimmed/MIXCR/Co1099.refine.report.txt --json-report /home/daniela/EnvironChile/Muestras/Co1099/trimmed/MIXCR/Co1099.refine.report.json /home/daniela/EnvironChile/Muestras/Co1099/trimmed/MIXCR/Co1099.vdjca /home/daniela/EnvironChile/Muestras/Co1099/trimmed/MIXCR/Co1099.refined.vdjca
+Analysis time: 830ms
+Time spent in correction: 402.81ms
+Number of input records: 2925
+Number of output records: 2877 (98.36%)
+UMI correction report:
+  UMI input diversity: 1475
+  UMI output diversity: 1415 (95.93%)
+  UMI input reads: 2925
+  UMI output reads: 2877 (98.36%)
+  UMI mean reads per tag: 1.98
+  UMI input core diversity: 1415 (95.93%)
+  UMI input core reads: 2864 (97.91%)
+  UMI directly corrected diversity: 12 (0.81%)
+  UMI directly corrected reads: 13 (0.44%)
+  UMI diversity filtered by tag quality: 48 (3.25%)
+  UMI reads filtered by tag quality: 48 (1.64%)
+  UMI diversity filtered by whitelist: 0 (0%)
+  UMI recursively corrected: 0
+Filter report:
+  Number of groups: 1415
+  Number of groups accepted: 1415 (100%)
+  Total records weight: 2877
+  Records weight accepted: 2877 (100%)
+  Operator #0:
+    Effective threshold: 1.0
+    Nested thresholds:
+      #0: 2
+      #1: 1
+======================================

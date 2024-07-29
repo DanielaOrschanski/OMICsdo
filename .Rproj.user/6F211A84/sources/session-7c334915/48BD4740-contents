@@ -1,0 +1,45 @@
+install.packages("miniUI", dependencies = TRUE)
+install.packages("pkgdown", dependencies = TRUE)
+install.packages("systemfonts", type = "source", repos = "http://cran.us.r-project.org", INSTALL_opts = "--no-lock", dependencies = TRUE)
+
+#sudo apt install build-essential libcurl4-gnutls-dev libxml2-dev libssl-devfrd
+install.packages("devtools", dependencies = TRUE)
+
+library(devtools)
+#devtools::create(path = "/home/daniela/OMICsdo")
+
+setwd("/home/daniela/OMICsdo")
+devtools::build()
+
+#devtools::load_all() #para asegurarte de que se está ejecutando correctamente
+devtools::document()
+setwd("/home/daniela/OMICsdo")
+devtools::install()
+#devtools::install_local("/home/daniela/OMICsdo_0.0.0.9000.tar.gz")
+
+library(OMICsdo)
+unlink("/home/daniela/R/x86_64-pc-linux-gnu-library/4.2/00LOCK-OMICsdo", recursive = TRUE)
+unlink("/home/daniela/R/x86_64-pc-linux-gnu-library/4.2/OMICsdo", recursive = TRUE)
+#restart R
+
+library(OMICsdo)
+
+patients_dir <- "~/EnvironChile/Prueba_1Muestra"
+
+patients_dir <- "~/EnvironChile/Muestras"
+
+RNAseqP(patients_dir,
+        genomeRef = "HG38",
+        fastQC_after_trim = FALSE,
+        plot_FastQC_trim = FALSE,
+        trim_quality = 30,
+        RunARRIBA = FALSE,
+        RunFeatureCounts = TRUE,
+        RunMIXCR = FALSE)
+
+
+counts <- FeatureCount_Report$counts
+
+remove.packages("TestLibrary")
+
+

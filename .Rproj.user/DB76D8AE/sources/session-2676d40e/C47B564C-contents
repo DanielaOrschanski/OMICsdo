@@ -1,0 +1,113 @@
+#Genero manifest--------------------------------------------------------------
+manifest <- data.frame("sample-id" = c(), "forward-absolute-filepath" = c(), "reverse-absolute-filepath" = c())
+file_list <- list.dirs(path = "/media/16TBDisk/Daniela/Biota/MuestrasLeo", full.names = TRUE, recursive = FALSE)
+d <- file_list[1]
+i = 1
+for(d in file_list) {
+  sample_id <- basename(d)
+  forward_path <- sprintf("%s/%s_S1_L001_R1_001.fastq.gz", d, sample_id)
+  reverse_path <- sprintf("%s/%s_S1_L001_R2_001.fastq.gz", d, sample_id)
+
+  manifest[i,"sample-id"] <- sample_id
+  manifest[i, "forward-absolute-filepath"] <- forward_path
+  manifest[i, "reverse-absolute-filepath"] <- reverse_path
+
+  i= i+1
+}
+
+write.table(manifest, file = "/media/16TBDisk/Daniela/Biota/MuestrasLeo/manifest.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
+
+################################################33
+# Cargar la biblioteca qiime2R
+#sudo apt-get install libxml2-dev libglpk-dev libgmp-dev
+BiocManager::install("igraph")
+library(igraph)
+BiocManager::install("phyloseq")
+remotes::install_github("jbisanz/qiime2R")
+
+library(phyloseq)
+library(qiime2R)
+
+# Cargar la tabla de OTUs
+#otu_table <- read_qza("/media/16TBDisk/Daniela/Biota/MuestrasLeo/otu-table.qza")
+
+#Esta es la tabla con los otus: 623 filas
+table_qza <- read_qza("/media/16TBDisk/Daniela/Biota/ResultadosQIIME2/table.qza")
+taxonomy <- read_qza("/media/16TBDisk/Daniela/Biota/ResultadosQIIME2/taxonomy.qza")
+
+#otu_df <- as.data.frame(otu_table$data)
+table_qza <- as.data.frame(table_qza$data)
+taxonomy <- as.data.frame(taxonomy$data)
+
+rownames(table_qza) == taxonomy$Feature.ID
+
+library(stringr)
+columnas_divididas <- str_split(taxonomy$Taxon, ";", simplify = TRUE)
+ncol(columnas_divididas)
+
+# Agrega las nuevas columnas al DataFrame
+"Kingdom" "Phylum"  "Class"   "Order"   "Family"  "Genus"   "Species"
+table_qza$Kingdom<- trimws(columnas_divididas[, 1])
+table_qza$Phylum <- trimws(columnas_divididas[, 2])
+table_qza$Class <- trimws(columnas_divididas[, 3])
+table_qza$Order <- trimws(columnas_divididas[, 4])
+table_qza$Family <- trimws(columnas_divididas[, 5])
+table_qza$Genus <- trimws(columnas_divididas[, 6])
+table_qza$Species <- trimws(columnas_divididas[, 7])
+
+library(openxlsx)
+write.xlsx(table_qza, file = "/media/16TBDisk/Daniela/Biota/ResultadosQIIME2/MiTablaOTUs.xlsx", rowNames = TRUE)
+
+
+### Lo mismo con otros parametros #############################################################
+#Esta es la tabla con los otus:  filas
+table_qza <- read_qza("/media/16TBDisk/Daniela/Biota/ResultadosQIIME2/table200.qza")
+taxonomy <- read_qza("/media/16TBDisk/Daniela/Biota/ResultadosQIIME2/taxonomy200.qza")
+
+#otu_df <- as.data.frame(otu_table$data)
+table_qza <- as.data.frame(table_qza$data)
+taxonomy <- as.data.frame(taxonomy$data)
+
+any(rownames(table_qza) == taxonomy$Feature.ID)
+which(rownames(table_qza) != taxonomy$Feature.ID)
+
+library(stringr)
+columnas_divididas <- str_split(taxonomy$Taxon, ";", simplify = TRUE)
+ncol(columnas_divididas)
+
+# Agrega las nuevas columnas al DataFrame
+"Kingdom" "Phylum"  "Class"   "Order"   "Family"  "Genus"   "Species"
+table_qza$Kingdom<- trimws(columnas_divididas[, 1])
+table_qza$Phylum <- trimws(columnas_divididas[, 2])
+table_qza$Class <- trimws(columnas_divididas[, 3])
+table_qza$Order <- trimws(columnas_divididas[, 4])
+table_qza$Family <- trimws(columnas_divididas[, 5])
+table_qza$Genus <- trimws(columnas_divididas[, 6])
+table_qza$Species <- trimws(columnas_divididas[, 7])
+
+length(unique(table_qza$Genus))
+
+write.xlsx(table_qza, file = "/media/16TBDisk/Daniela/Biota/ResultadosQIIME2/MiTablaOTUs_200.xlsx", rowNames = TRUE)
+
+#################################################3
+# Con los archivos de Leo
+table_qzaL <- read_qza("/media/16TBDisk/Daniela/Biota/ArchivosLeo/tableLeo.qza")
+table_qza_filt <- read_qza("/media/16TBDisk/Daniela/Biota/ArchivosLeo/table_tax_filt.qza")
+taxonomyL <- read_qza("/media/16TBDisk/Daniela/Biota/ArchivosLeo/merged-taxonomy.qza")
+
+#otu_df <- as.data.frame(otu_table$data)
+table_qzaL <- as.data.frame(table_qzaL$data)
+table_qza_filt <- as.data.frame(table_qza_filt$data)
+
+min(colSums(table_qza_filt))
+
+taxonomyL <- as.data.frame(taxonomyL$data)
+
+meta <- read.table("/media/16TBDisk/Daniela/Biota/ArchivosLeo/Metadata_34_parametros.txt")
+metaejemplo <- read.table("/media/16TBDisk/Daniela/Biota/ArchivosLeo/sample-metadata.tsv", header=TRUE, sep="\t")
+
+colnames(meta) <- meta[1,]
+meta <- meta[-1,-17]
+write.table(meta, file = "/media/16TBDisk/Daniela/Biota/ArchivosLeo/Metadata_34_parametros.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
+metaver <- read.table("/media/16TBDisk/Daniela/Biota/ArchivosLeo/Metadata_34_parametros.tsv", header=TRUE, sep="\t")

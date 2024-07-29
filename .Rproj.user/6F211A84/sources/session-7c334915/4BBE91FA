@@ -1,0 +1,26 @@
+{
+    "id": "4BBE91FA",
+    "path": "~/OMICsdo/R/runFeatureCounts.R",
+    "project_path": "R/runFeatureCounts.R",
+    "type": "r_source",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1704733820127.0,
+    "source_on_save": false,
+    "relative_order": 9,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "30,2",
+        "scrollLine": "16"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1704712716,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1704712716,
+    "read_only": false,
+    "read_only_alternatives": []
+}

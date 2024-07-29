@@ -1,0 +1,11 @@
+#!/bin/bash
+
+FILE=(SRR13500356 SRR13500364 SRR13500373 SRR13500380 SRR13500383 SRR13500390 SRR13500397 SRR13500398 SRR13500399 SRR13500402 SRR13500409 SRR13500417 SRR13500425 SRR13500433 SRR13500441 SRR13500449 SRR13500457 SRR13500465 SRR13500474 SRR13500481 SRR13500489 SRR13500497)
+DIR=/media/compartido3t/guada/PRJNA693857
+
+for item in ${FILE[*]}
+do
+samtools sort $DIR/$item/$item.bam -o $DIR/$item/${item}_sorted.bam
+arcasHLA extract $DIR/$item/${item}_sorted.bam -o $DIR/$item
+arcasHLA genotype $DIR/$item/${item}_sorted.extracted.1.fq.gz $DIR/$item/${item}_sorted.extracted.2.fq.gz -o $DIR/$item
+done

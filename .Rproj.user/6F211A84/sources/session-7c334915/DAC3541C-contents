@@ -1,0 +1,61 @@
+Analysis date: Fri Jan 05 19:05:54 ART 2024
+Input file(s): /home/daniela/EnvironChile/Muestras/C01507/Co1507_combined_R1.fastq.gz,/home/daniela/EnvironChile/Muestras/C01507/Co1507_combined_R2.fastq.gz
+Output file(s): ./result.vdjca
+Version: 4.3.2; built=Tue Apr 11 15:35:07 ART 2023; rev=123d699964; lib=repseqio.v2.2
+Command line arguments: align --report ./result.align.report.txt --json-report ./result.align.report.json --preset takara-human-bcr-full-length /home/daniela/EnvironChile/Muestras/C01507/Co1507_combined_R1.fastq.gz /home/daniela/EnvironChile/Muestras/C01507/Co1507_combined_R2.fastq.gz ./result.vdjca
+Analysis time: 59.55m
+Total sequencing reads: 34036239
+Successfully aligned reads: 8800 (0.03%)
+Alignment failed: no hits (not TCR/IG?): 33900089 (99.6%)
+Alignment failed: absence of V hits: 189 (0%)
+Alignment failed: absence of J hits: 127137 (0.37%)
+Alignment failed: no target with both V and J alignments: 24 (0%)
+Overlapped: 33726962 (99.09%)
+Overlapped and aligned: 8752 (0.03%)
+Overlapped and not aligned: 33718210 (99.07%)
+Alignment-aided overlaps, percent of overlapped and aligned: 6 (0.07%)
+Partial aligned reads, percent of successfully aligned: 144 (1.64%)
+V gene chimeras: 2 (0%)
+Paired-end alignment conflicts eliminated: 6 (0%)
+Realigned with forced non-floating bound: 618566 (1.82%)
+Realigned with forced non-floating right bound in left read: 42 (0%)
+Realigned with forced non-floating left bound in right read: 42 (0%)
+TRA chains: 32 (0.36%)
+TRA non-functional: 8 (25%)
+TRB chains: 39 (0.44%)
+TRB non-functional: 5 (12.82%)
+TRG chains: 6 (0.07%)
+TRG non-functional: 2 (33.33%)
+IGH chains: 2439 (27.72%)
+IGH non-functional: 75 (3.08%)
+IGK chains: 4317 (49.06%)
+IGK non-functional: 95 (2.2%)
+IGL chains: 1967 (22.35%)
+IGL non-functional: 49 (2.49%)
+Trimming report:
+  R1 reads trimmed left: 4006 (0.01%)
+  R1 reads trimmed right: 20 (0%)
+  Average R1 nucleotides trimmed left: 0.0032142505521835125
+  Average R1 nucleotides trimmed right: 9.754309223178273E-6
+  R2 reads trimmed left: 1266 (0%)
+  R2 reads trimmed right: 198 (0%)
+  Average R2 nucleotides trimmed left: 6.789821871917165E-5
+  Average R2 nucleotides trimmed right: 1.4399358283974912E-4
+Tag parsing report:
+  Execution time: 0ns
+  Total reads: 34036239
+  Matched reads: 34036239 (100%)
+  Projection +R1 +R2: 34036239 (100%)
+  For variant 0:
+    For projection [1, 2]:
+      R1:Left position: 7
+      R1:Right position: 150
+      UMI:Left position: 0
+      UMI:Right position: 12
+      R2:Left position: 22
+      Variants: 0
+      Cost: 0
+      R1 length: 143
+      UMI length: 12
+      R2 length: 128
+======================================

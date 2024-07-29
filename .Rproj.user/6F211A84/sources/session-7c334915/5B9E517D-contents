@@ -1,0 +1,38 @@
+runFastQC(patient_dir = "~/Biota/MuestrasFolder/Concat5")
+runFastQC(patient_dir = "~/Biota/MuestrasFolder/Muestra183")
+runFastQC(patient_dir = "~/Biota/MuestrasFolder/Muestra192")
+
+plot <- plotFastQC_PBSQ(patients_dir = "~/Biota/MuestrasFolder")
+print(plot)
+library(readr)
+library(stringr)
+library(ggplot2)
+library(reshape2)
+library(png)
+
+#Plot de comparacion de calidad de las 4 lanes de la muestra 5 ------------------------------
+patients_dir <- "~/Biota/MuestrasFolder"
+patients_dir <- "~/Biota/MuestrasFolder/Concat5/partes"
+
+file_list <- list.dirs(path = patients_dir, full.names = FALSE, recursive = FALSE)
+
+for (patient in file_list) {
+  patient_dir <- sprintf("%s/%s", patients_dir, patient)
+  runFastQC(patient_dir)
+  message(sprintf("The patient %s has already been processed with FastQC", patient))
+
+  #Returns trimmed folder inside patient's folder
+  patient_dir_trim <- runTrimgalore(patient_dir, trim_quality = 50)
+  message(sprintf("The patient %s has already been processed with TrimGalore", patient))
+
+  runFastQC(patient_dir_trim)
+  message(sprintf("The patient %s's trimmed file has already been processed with FastQC", patient))
+}
+
+
+plot <- plotFastQC_PBSQ(patients_dir = "~/Biota/MuestrasFolder", trimmed = TRUE)
+print(plot)
+
+
+plot <- plotFastQC_PBSQ(patients_dir = "~/Biota/MuestrasFolder/Concat5/partes", trimmed = TRUE)
+print(plot)

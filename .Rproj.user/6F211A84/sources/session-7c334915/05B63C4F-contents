@@ -1,0 +1,71 @@
+#' @title RunTrimgalore
+#' @description Corre la funcion TrimGalore para eliminar los adapters y las lecturas (y bases) de baja calidad.
+#' @param fileR1 Path donde se encuentra el archivo R1 de formato fasta o fastq
+#' @param outdir Path de output donde se guarda el archivo trimeado. En caso de no aportar nignun path, outdir toma el path de entrada R1.
+#' @param replace En caso de ser TRUE, se reemplaza el archivo R1 y R2 de entrada por los archivos trimeados.
+#' @return ????
+
+RunTrimgalore <- function(patient_dir, replace=FALSE) {
+  # Chequeamos que esta descargado TrimGalore. En caso de no estarlo, lo descarga
+  TrimGalore <- downloadTrimGalore()
+
+  patient_id <- basename(patient_dir)
+  file_list <- list.files(patient_dir)
+  fileR1 <- paste0(patient_dir, "/", file_list[endsWith(file_list, "R1.fastq.gz")], sep="")
+  fileR2 <- paste0(patient_dir, "/", file_list[endsWith(file_list, "R2.fastq.gz")], sep="")
+
+  if ((length(nchar(fileR1)) == 0) | (length(nchar(fileR2)) == 0)) {
+    stop("There are no fastq files in this directory")
+  }
+
+
+  # Se fija si los archivos de entrada son de formato .gz
+  gziped <- ifelse(stringr::str_detect(fileR1,".gz"),"--gzip","--dont_gzip")
+
+  #Se fija si está hecho el trimmeado antes:
+  trim_dir <- list.files(paste0(patient_dir, "/trimmed"))
+  if (!(length(nchar(file_list[endsWith(trim_dir, "val_1.fq.gz")])) == 0)) {
+    ifelse(gziped == "--gzip",
+           file_trim<- paste0(patient_dir, "/", file_list[endsWith(file_list, "val_1.fq.gz")], sep=""),
+           file_trim <- paste0(patient_dir, "/", file_list[endsWith(file_list, "val_1.fq")], sep=""))
+
+    message("You have already trimmed this sample")
+    return(file_trim)
+  }
+
+  dir.create(sprintf("%s/trimmed", patient_dir))
+
+  outdir <- sprintf("%s/trimmed", patient_dir)
+
+  # Trimeado por consola. Guarda el tiempo que tardo en ejecutarse
+  t1 <- system.time(system2(command = TrimGalore,
+                            args =c("--paired",
+                                    gziped,
+                                    paste0("--output_dir ", outdir),
+                                    fileR1,
+                                    fileR2,
+                                    paste0("--basename ", basename(patient_dir)))))
+                            #stderr = file.path(outdir, "ErrLog.txt")))
+
+  #~/TrimGalore-0.6.6/trim_galore --paired $fiileR1 $fileR2 --fastqc --output_dir $DIR/$item/trimmed
+
+  # Calculo el tamaño de los archivos de entrada sin trimmear
+  of.size1 <- file.info(fileR1)$size
+  of.size2 <- file.info(fileR2)$size
+
+  # Si el formato era .gz, el output se llamara tambien como .gz, porque TrimGalore asi lo genera
+  if (gziped == "--gzip") {
+    ofile <- paste0(patient_dir, "/",basename(patient_dir),"_val_1.fq.gz")
+  } else {
+    ofile <- paste0(patient_dir, "/",basename(patient_dir),"_val_1.fq")
+  }
+
+  # Tamanos del archivo de salida
+  ot.size1 <- file.info(ofile)$size
+  ot.size2 <- file.info(stringr::str_replace_all(ofile,"val_1.","val_2."))$size
+
+  # No entiendo porque hace de return esta asignacion de variables
+  #return(c(ifile = fileR1, tfile = ofile , Time = t1, isize1 = of.size1, isize2 = of.size2,
+  #         tsize1 = ot.size1, tsize2 = ot.size2))
+  return(ofile)
+}

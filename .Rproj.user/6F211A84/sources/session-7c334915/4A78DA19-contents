@@ -1,0 +1,159 @@
+#' @title downloadSTAR
+#' @description Downloads and decompresses the GATK software
+#' @return The path where the .exe file is located
+#'
+BiocManager::install("GEOquery")
+library(GEOquery)
+
+downloadSTAR <- function(soft_directory = sprintf("%s/OMICsSoft", Sys.getenv('R_LIBS_USER'))) {
+
+  tryCatch(
+    expr = {
+
+      softwares <- readLines(sprintf("%s/OMICsSoft/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
+      #Para que sea insensible a las mayusculas o minusculas se pone el (?i)
+      linea_software <- grep("(?i)STAR", softwares, ignore.case = TRUE, value = TRUE)
+      STAR <<- strsplit(linea_software, " ")[[1]][[2]]
+
+      system2(STAR, "--help")
+      return(STAR)
+    },
+    error = function(e) {
+      # En caso de haberlo descargado y hay algun problema con el ejecutable,
+      # eliminamos y descargamos de nuevo
+      if (file.exists(sprintf('%s/STAR', soft_directory))) {
+        system2("rm", sprintf('-r %s/STAR', soft_directory))
+        print("There is a problem with the STAR exe file. It will be removed and download again")
+      }
+
+      message("STAR download and installation is about to begin...
+              Please be patient, it may take a while.")
+      print(e)
+
+      tryCatch(
+        expr = {
+          # Proceso de Descarga de STAR
+          dir.create(sprintf("%s/STAR", soft_directory))
+          URL <- "https://github.com/alexdobin/STAR/archive/2.7.11a.tar.gz"
+          version <- sub("\\.tar\\.gz$", "", basename(URL))
+          dir <- sprintf("%s/STAR", soft_directory)
+          setwd(dir)
+          # Get latest STAR source from releases
+          system2("wget", args = c(URL, "-P", dir), wait = TRUE, stdout = NULL, stderr = NULL)
+          system2("tar", sprintf("-xzf %s.tar.gz", version))
+          # Compile
+          setwd(sprintf("%s/STAR-%s/source", dir, version))
+          system2("make", "STAR")
+
+          # Definimos la variable de STAR con su ejecutable
+          STAR <<- sprintf("%s/STAR/STAR-2.7.11a/bin/Linux_x86_64_static/STAR", soft_directory)
+          system2(STAR, "--help")
+
+          # En caso de que la descarga haya sido exitosa, agregamos el path al archivo TXT
+          softwares <- readLines(sprintf("%s/OMICsSoft/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
+          softwares_actualizado <- c(softwares, sprintf("STAR %s", STAR))
+          write(softwares_actualizado, file = sprintf("%s/OMICsSoft/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
+
+          return(STAR)
+        },
+
+        error = function(e) {
+          message("An error occured while performing the STAR download and installation.
+      Please remember that some packages are required and you must download them by yourself.
+On the Linux command-line print:
+------------------------------------------------------
+    sudo apt install wget tar
+------------------------------------------------------")
+          print(e)
+        },
+
+        finally = {
+          message("-.Message from STAR")
+        }
+      )
+    },
+    finally = {
+      message("STAR download and installation completed successfully")
+    }
+  )
+}
+
+#' @title downloadHG38
+#' @description Downloads the FASTA and the annotation of the genome reference version HG38.
+#' @return Paths of FASTA and GTF(annotation) from the genome reference.
+
+downloadHG38 <- function() {
+  soft_directory = sprintf("%s/OMICsSoft", Sys.getenv('R_LIBS_USER'))
+
+  #Chequea si ya está descargado
+  if(!(file.exists(sprintf("%s/HG38", soft_directory)))) {
+
+    dir.create(sprintf("%s/HG38", soft_directory))
+    URL <- "https://ftp.ensembl.org/pub/release-110/gtf/homo_sapiens/Homo_sapiens.GRCh38.110.gtf.gz"
+    dir <- sprintf("%s/HG38", soft_directory)
+    setwd(dir)
+    system2("wget", args = c(URL, "-P", dir), wait = TRUE, stdout = NULL, stderr = NULL)
+
+
+    URL <- "https://ftp.ensembl.org/pub/release-110/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna_sm.primary_assembly.fa.gz"
+    system2("wget", args = c(URL, "-P", dir), wait = TRUE, stdout = NULL, stderr = NULL)
+
+    AnnotationHG38 <- sprintf("%s/HG38/Homo_sapiens.GRCh38.110.gtf.gz", soft_directory)
+    FastaHG38 <- sprintf("%s/HG38/Homo_sapiens.GRCh38.dna_sm.primary_assembly.fa.gz", soft_directory)
+
+    gunzip(AnnotationHG38, destname = gsub("[.]gz$", "", AnnotationHG38), overwrite = FALSE, remove = TRUE)
+    gunzip(FastaHG38, destname = gsub("[.]gz$", "", FastaHG38), overwrite = FALSE, remove = TRUE)
+
+    #Writes down the paths in the txt
+    softwares <- readLines(sprintf("%s/OMICsSoft/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
+    softwares_actualizado <- c(softwares, sprintf("HG38Annotation %s", AnnotationHG38), sprintf("HG38FASTA %s", FastaHG38))
+    write(softwares_actualizado, file = sprintf("%s/OMICsSoft/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
+
+
+  } else {
+    message("The genome reference HG38 was already downloadaed")
+    softwares <- readLines(sprintf("%s/OMICsSoft/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
+    linea_software <- grep("HG38Annotation", softwares, ignore.case = TRUE, value = TRUE)
+    HG38Annotation <<- strsplit(linea_software, " ")[[1]][[2]]
+    linea_software <- grep("HG38FASTA", softwares, ignore.case = TRUE, value = TRUE)
+    HG38FASTA <<- strsplit(linea_software, " ")[[1]][[2]]
+
+  }
+
+  AnnotationHG38 <<- sprintf("%s/HG38/Homo_sapiens.GRCh38.110.gtf", soft_directory)
+  FastaHG38 <<- sprintf("%s/HG38/Homo_sapiens.GRCh38.dna_sm.primary_assembly.fa", soft_directory)
+
+  index_dir <- indexRefSTAR()
+
+  return(c(AnnotationHG38, FastaHG38, index_dir))
+
+}
+
+
+indexRefSTAR <- function() {
+
+  soft_directory = sprintf("%s/OMICsSoft", Sys.getenv('R_LIBS_USER'))
+
+  if(file.exists(sprintf("%s/HG38/index", soft_directory))) {
+    message("The reference genome was already indexed")
+    return(sprintf("%s/HG38/index", soft_directory))
+  }
+  out <- downloadHG38()
+  AnnotationHG38 <- out[[1]]
+  FastaHG38 <- out[[2]]
+
+  nThreads <- max(1,parallel::detectCores()-2)
+
+  log <- system2(command = STAR,
+                 args = c(paste0("--runThreadN ", nThreads),
+                          "--runMode genomeGenerate",
+                          paste0("--genomeDir " , sprintf("%s/HG38/index", soft_directory)),
+                          paste0("--genomeFastaFiles ", FastaHG38),
+                         "--sjdbOverhang 100 ",
+                         "--genomeSAindexNbases 12",
+                          paste0("--sjdbGTFfile ", AnnotationHG38)
+                 ), stdout = TRUE)#out.file)
+
+  return(sprintf("%s/HG38/index", soft_directory))
+
+}

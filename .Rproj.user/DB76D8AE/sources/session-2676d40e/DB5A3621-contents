@@ -1,0 +1,289 @@
+mkdir qiime2-biota
+
+conda activate qiime2-amplicon-2023.9
+cd qiime2-biota
+
+#Concatenar las 4 partes del R1 y las 4 partes del R2 para cada fastq: -----------------------
+
+#en terminal:
+cd MuestrasLeo
+
+#Muestra 5:
+#R1:
+cat 5_S12_L001_R1_001.fastq.gz 5_S12_L002_R1_001.fastq.gz 5_S12_L003_R1_001.fastq.gz 5_S12_L004_R1_001.fastq.gz > L5_5_L001_R1_001.fastq.gz
+
+#Para R2:
+cat 5_S12_L001_R2_001.fastq.gz 5_S12_L002_R2_001.fastq.gz 5_S12_L003_R2_001.fastq.gz 5_S12_L004_R2_001.fastq.gz > L5_5_L001_R2_001.fastq.gz
+
+#Muestra 183:
+cd Muestra183
+#R1:
+cat 183_S10_L001_R1_001.fastq.gz 183_S10_L002_R1_001.fastq.gz 183_S10_L003_R1_001.fastq.gz 183_S10_L004_R1_001.fastq.gz > concat183_R1.fastq.gz
+#R2:
+cat 183_S10_L001_R2_001.fastq.gz 183_S10_L002_R2_001.fastq.gz 183_S10_L003_R2_001.fastq.gz 183_S10_L004_R2_001.fastq.gz > concat183_R2.fastq.gz
+
+
+#Muestra 192:
+cd Muestra192
+#R1:
+cat 192_S11_L001_R1_001.fastq.gz 192_S11_L002_R1_001.fastq.gz 192_S11_L003_R1_001.fastq.gz 192_S11_L004_R1_001.fastq.gz > concat192_R1.fastq.gz
+#R2:
+cat 192_S11_L001_R2_001.fastq.gz 192_S11_L002_R2_001.fastq.gz 192_S11_L003_R2_001.fastq.gz 192_S11_L004_R2_001.fastq.gz > concat192_R2.fastq.gz
+
+
+
+#Ejemplo del tipo de formato fastq que yo creo que tengo:Casava 1.8 paired-end demultiplexed fastq
+wget \
+-O "casava-18-paired-end-demultiplexed.zip" \
+"https://data.qiime2.org/2023.9/tutorials/importing/casava-18-paired-end-demultiplexed.zip"
+unzip -q casava-18-paired-end-demultiplexed.zip
+
+
+#Importo los fastq en formato de QIIME2 artifact .qza -----------------------------------
+# --input-path es una carpeta con el R1 y R2
+#Tarda 20 minutos aprox
+#.qza es del tamaño de R1 + R2
+qiime tools import \
+--type 'SampleData[PairedEndSequencesWithQuality]' \
+--input-path /media/16TBDisk/Daniela/Biota/MuestrasLeo/80 \
+--input-format CasavaOneEightSingleLanePerSampleDirFmt \
+--output-path demux-paired-end.qza
+
+
+#Summary of the demultiplexing results.
+#Tarda 10 min
+qiime demux summarize \
+--i-data demux-paired-end.qza \
+--o-visualization demux-paired-end.qzv
+
+
+#Visualizacion de todos los archivos .qzv
+qiime tools view demux-paired-end.qzv
+
+
+#Otra opcion: Importo todos los archivos en un txt con columnas sample-id
+qiime tools import \
+  --type 'SampleData[PairedEndSequencesWithQuality]' \
+  --input-path /media/16TBDisk/Daniela/Biota/MuestrasLeo/manifest.txt \
+  --output-path demux.qza \
+  --input-format PairedEndFastqManifestPhred33V2
+
+
+
+#Control de calidad: --------------------------------------------------------------
+#Opcion1: DADA2: TARDA un monton!!!
+qiime dada2 denoise-single \
+--i-demultiplexed-seqs demux-paired-end.qza \
+--p-trim-left 0 \
+--p-trunc-len 220 \
+--o-representative-sequences rep-seqs-dada2.qza \
+--o-table table-dada2.qza \
+--o-denoising-stats stats-dada2.qza
+
+qiime metadata tabulate \
+--m-input-file stats-dada2.qza \
+--o-visualization stats-dada2.qzv
+
+
+
+#Para la parte1:
+qiime dada2 denoise-single \
+--i-demultiplexed-seqs demux-paired-endL001.qza \
+--p-trim-left 0 \
+--p-trunc-len 70 \
+--o-representative-sequences rep70-seqs-dada2.qza \
+--o-table table70-dada2.qza \
+--o-denoising-stats stats70-dada2.qza
+
+qiime metadata tabulate \
+--m-input-file stats70-dada2.qza \
+--o-visualization stats70-dada2.qzv
+
+#https://view.qiime2.org/ VER EL STATS-DADA2.QZV EN ESA PAGINA
+
+#Cambio el nombre para que sea generico y no diga "dada2"
+mv rep70-seqs-dada2.qza rep-seqs.qza
+mv table70-dada2.qza table.qza
+
+mv rep-seqs-deblur.qza rep-seqs.qza
+mv table-deblur.qza table.qza
+
+
+#Opcion 2: Deblur
+qiime quality-filter q-score \
+--i-demux demux-paired-end.qza \
+--o-filtered-sequences demux-filtered.qza \
+--o-filter-stats demux-filter-stats.qza
+
+
+#error:  max() arg is an empty sequence
+qiime deblur denoise-16S \
+--i-demultiplexed-seqs demux-filtered.qza \
+--p-trim-length 70 \
+--o-representative-sequences rep-seqs-deblur.qza \
+--o-table table-deblur.qza \
+--p-sample-stats \
+--o-stats deblur-stats.qza
+
+qiime metadata tabulate \
+--m-input-file demux-filter-stats.qza \
+--o-visualization demux-filter-stats.qzv
+
+qiime deblur visualize-stats \
+--i-deblur-stats deblur-stats.qza \
+--o-visualization deblur-stats.qzv
+
+
+#Otra opcion dada: DA ERROR
+qiime dada2 denoise-paired \
+  --i-demultiplexed-seqs /media/16TBDisk/Daniela/Biota/ResultadosQIIME2/demux.qza \
+  --p-trim-left-f 0 \
+  --p-trim-left-r 0 \
+  --p-trunc-len-f 0 \
+  --p-trunc-len-r 100 \
+  --o-representative-sequences rep-seqs-dada.qza \
+  --o-table table-dada.qza \
+  --o-denoising-stats stats-dada.qza
+
+qiime dada2 denoise-single \
+  --i-demultiplexed-seqs demux.qza \
+  --p-trim-left 0 \
+  --p-trunc-len 240 \
+  --o-representative-sequences rep-seqs-dada2.qza \
+  --o-table table-dada2.qza \
+  --o-denoising-stats stats-dada2.qza
+
+#Error:
+cat /tmp/qiime2-q2cli-err-vge_4_mf.log
+cat /tmp/qiime2-q2cli-err-knivbtwy.log
+
+Rscript -e 'install.packages("rlang", repos="https://cran.r-project.org")'
+BiocManager::install("dada2")
+library(rlang)
+library(dada2)
+desc <- packageDescription("dada2")
+desc$Depends
+R --version
+
+#Otra opcion Deblur: ANDA
+qiime deblur denoise-16S \
+  --i-demultiplexed-seqs demux.qza \
+  --p-trim-length 240 \
+  --o-representative-sequences rep-seqs.qza \
+  --o-table table.qza \
+  --o-stats stats-deblur.qza
+
+qiime feature-table summarize \
+  --i-table table200.qza \
+  --o-visualization table200.qzv
+
+#Esto da error porque no tengo metadata:
+qiime feature-table summarize \
+  --i-table table.qza \
+  --o-visualization table.qzv \
+  --m-sample-metadata-file metadata.txt
+
+
+#Taxonomic analysis -------------------------------------------------------------------------------
+wget \
+-O "gg-13-8-99-515-806-nb-classifier.qza" \
+"https://data.qiime2.org/2023.9/common/gg-13-8-99-515-806-nb-classifier.qza"
+
+qiime feature-classifier classify-sklearn \
+--i-classifier gg-13-8-99-515-806-nb-classifier.qza \
+--i-reads rep-seqs.qza \
+--o-classification taxonomy.qza
+
+qiime metadata tabulate \
+--m-input-file taxonomy.qza \
+--o-visualization taxonomy.qzv
+
+qiime taxa barplot \
+--i-table table.qza \
+--i-taxonomy taxonomy.qza \
+--m-metadata-file sampledata_M5P1.tsv \
+--o-visualization taxa-bar-plots.qzv
+
+#Otra opcion: ---------------------------------------------------------------------------
+
+#1. Genera un clasificador de la base de datos SILVA
+wget https://www.arb-silva.de/fileadmin/silva_databases/qiime/Silva_132_release.zip
+unzip Silva_132_release.zip
+
+qiime tools import \
+  --type 'FeatureData[Sequence]' \
+  --input-path SILVA_132_QIIME_release/rep_set/rep_set_16S_only/99/silva_132_99_16S.fna \
+  --output-path silva-132-99-seqs.qza
+
+qiime tools import \
+  --type 'FeatureData[Taxonomy]' \
+  --input-format HeaderlessTSVTaxonomyFormat \
+  --input-path SILVA_132_QIIME_release/taxonomy/16S_only/99/majority_taxonomy_7_levels.txt \
+  --output-path silva-132-99-tax.qza
+
+#Este tarda MUCHISIMAS HORAS pero funciona:
+qiime feature-classifier fit-classifier-naive-bayes \
+  --i-reference-reads silva-132-99-seqs.qza \
+  --i-reference-taxonomy silva-132-99-tax.qza \
+  --o-classifier classifier.qza
+
+#2. Clasifica a los otus:
+qiime feature-classifier classify-sklearn \
+  --i-classifier classifier.qza \
+  --i-reads rep-seqs.qza \
+  --o-classification taxonomy.qza
+
+qiime metadata tabulate \
+  --m-input-file taxonomy200.qza \
+  --o-visualization taxonomy200.qzv
+
+
+#3. Generación de tabla de OTUS
+qiime taxa collapse \
+  --i-table table.qza \
+  --i-taxonomy taxonomy.qza \
+  --p-level 6 \
+  --o-collapsed-table otu-table.qza
+
+qiime feature-table summarize \
+  --i-table otu-table.qza \
+  --o-visualization otu-table.qzv
+
+
+
+
+
+qiime tools export \
+  --input-path otu-table.qza \
+  --output-path exported-otu-table
+
+biom convert \
+  -i exported-otu-table/feature-table.biom \
+  -o otu-table.csv \
+  --to-tsv
+
+otu_df <- read.table("/media/16TBDisk/Daniela/Biota/MuestrasLeo/otu-table.csv", sep = "\t", header = TRUE, row.names = 1, comment.char = "#")
+
+#Diversidad  --------------------------------------
+qiime feature-table filter-samples \
+  --i-table tableLeo.qza \
+  --m-metadata-file Metadata_34_parametros.tsv \
+  --o-filtered-table filtered-table.qza
+
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny insertion-tree.qza \
+  --i-table filtered-table.qza \
+  --p-sampling-depth 1109 \
+  --m-metadata-file Metadata_34_parametros.tsv \
+  --output-dir core-metrics-results
+
+qiime emperor plot \
+  --i-pcoa core-metrics-results/bray_curtis_pcoa_results.qza \
+  --m-metadata-file Metadata_34_parametros.tsv  \
+  --p-custom-axes Ganglio \
+  --o-visualization core-metrics-results/bray-curtis-emperor-Ganglio.qzv
+
+
+
+

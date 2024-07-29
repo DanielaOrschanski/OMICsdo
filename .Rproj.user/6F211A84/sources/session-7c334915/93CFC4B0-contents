@@ -1,0 +1,5 @@
+
+FastQC /home/daniela/OMICsdoSof/FastQC/FastQC/fastqc
+STAR /home/daniela/OMICsdoSof/STAR/STAR-2.7.11a/bin/Linux_x86_64_static/STAR
+TrimGalore /home/daniela/OMICsdoSof/TrimGalore/TrimGalore-0.6.10/trim_galore
+ARRIBA /home/daniela/OMICsdoSof/Arriba/arriba_v2.4.0/arriba
