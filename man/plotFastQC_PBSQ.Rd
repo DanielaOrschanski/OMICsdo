@@ -4,12 +4,14 @@
 \alias{plotFastQC_PBSQ}
 \title{plotFastQC_PBSQ}
 \usage{
-plotFastQC_PBSQ(patients_dir, trimmed = FALSE)
+plotFastQC_PBSQ(patients_dir, trimmed = FALSE, R = "R1R2")
 }
 \arguments{
 \item{patients_dir}{Path of the directory that contains one folder with fastq files (R1 and R2) of each patient.}
 
 \item{trimmed}{it is set to TRUE when the fastQC files that you want to plot came from a trimmed file.}
+
+\item{R}{will indicate if the curve of the plot will be constructed by the mean of R1 (R= "R1"), R2 (R= "R2") or by both (R= "R1R2").}
 }
 \description{
 generates the principal plot ("Per Base Sequence Quality") which compares the quality for all the samples.

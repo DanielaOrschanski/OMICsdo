@@ -53,9 +53,9 @@ runARRIBA <- function(patient_dir, genomeversion = "hg38", assemblyVersion = "GR
                    paste0("-p ", sprintf("%s/protein_domains_%s_%s_v2.4.0.gff3", DB_Arriba, genomeversion,assemblyVersion))
           ))
 
-  if(!all(file.exists(fusion.file,fusion.discarded.file))){
-    cat(paste0("\nFUSION FILES NOT FOUND\n",fusion.file,"\n", fusion.discarded.file))
-  }
+  #if(!all(file.exists(fusion.file,fusion.discarded.file))){
+  #  cat(paste0("\nFUSION FILES NOT FOUND\n",fusion.file,"\n", fusion.discarded.file))
+  #}
 
   fusionsTable <- generateFusionsReport(fusion.file, assemblyVersion, patient_id, patient_dir)
   message("ARRIBA's analysis has finished!")

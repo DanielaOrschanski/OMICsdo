@@ -28,9 +28,19 @@ runSTAR <- function(patient_dir, twoPass = c("None","Basic"), nThreads) {
 
 
   file_list <- list.files(patient_dir)
+  id <- basename(patient_dir)
+  if(id  == "trimmed") {
+    id <- basename(dirname(patient_dir))
+  }
 
   #Evita repetir el analisis si ya fue hecho
-  if (!(length(nchar(file_list[endsWith(file_list, "Aligned_out.bam")])) == 0)) {
+  if (!(length(nchar(file_list[endsWith(file_list, sprintf("%s_Aligned_out.bam", id))])) == 0)) {
+    if (is.na(file.info(file_list[endsWith(file_list, "Aligned_out.bam")])$size) ) {
+      print("entre a eso de eliminar en la funcion del STAR")
+      #file.remove(paste(patient_dir, file_list[endsWith(file_list, "Aligned_out.bam")], sep="/"))
+      #file.remove(paste(patient_dir, file_list[endsWith(file_list, "Log.out")], sep ="/"))
+      #file.remove(paste(patient_dir, file_list[endsWith(file_list, "Log.progress.out")] , sep= "/"))
+    }
     message("The STAR alignment for this sample has already been done.")
     return(paste0(patient_dir, "/", file_list[endsWith(file_list, "Aligned_out.bam")], sep=""))
   }

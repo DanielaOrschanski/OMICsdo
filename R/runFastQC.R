@@ -31,7 +31,7 @@ runFastQC <- function(patient_dir) {
       return(paste0(patient_dir, "/", file_list[endsWith(file_list, "va_1_fastqc")], sep=""))
     }
   } else {
-    if (!(length(nchar(file_list[endsWith(file_list, "R1_fastqc")])) == 0)) {
+    if ((length(nchar(file_list[endsWith(file_list, "R1_fastqc")])) != 0) & (length(nchar(file_list[endsWith(file_list, "R2_fastqc")])) != 0)) {
       message("The FastQC for this sample has already been done.")
       return(paste0(patient_dir, "/", file_list[endsWith(file_list, "R1_fastqc")], sep=""))
     }
@@ -63,13 +63,14 @@ runFastQC <- function(patient_dir) {
 #' @description generates the principal plot ("Per Base Sequence Quality") which compares the quality for all the samples.
 #' @param patients_dir Path of the directory that contains one folder with fastq files (R1 and R2) of each patient.
 #' @param trimmed it is set to TRUE when the fastQC files that you want to plot came from a trimmed file.
+#' @param R will indicate if the curve of the plot will be constructed by the mean of R1 (R= "R1"), R2 (R= "R2") or by both (R= "R1R2").
 #' @export
 #' @import readr
 #' @import stringr
 #' @import ggplot2
 #' @import reshape2
 #' @import png
-plotFastQC_PBSQ <- function(patients_dir, trimmed = FALSE) {
+plotFastQC_PBSQ <- function(patients_dir, trimmed = FALSE, R= "R1R2") {
 
   #Separación de los modulos del fastqc para generar graficos
   dir_list <- list.dirs(path = patients_dir, full.names = FALSE, recursive = FALSE)
@@ -90,11 +91,22 @@ plotFastQC_PBSQ <- function(patients_dir, trimmed = FALSE) {
       unzip(file_fastqc_zip, exdir = sprintf("%s/%s", patients_dir, dir_list[p]))
 
       file_list <- list.files(sprintf("%s/%s", patients_dir, dir_list[p]))
-      dir_fastqc_R1 <- paste0(patients_dir, "/", dir_list[p],"/", file_list[endsWith(file_list, "R1_fastqc")], sep="")
-      dir_fastqc_R2 <- paste0(patients_dir, "/", dir_list[p],"/", file_list[endsWith(file_list, "R2_fastqc")], sep="")
 
-      dir_fastq_R1 <- paste0(patients_dir, "/", dir_list[p],"/", file_list[endsWith(file_list, "R1_fastq.gz")], sep="")
-      dir_fastq_R2 <- paste0(patients_dir, "/", dir_list[p],"/", file_list[endsWith(file_list, "R2_fastq.gz")], sep="")
+      if (!(length(nchar(file_list[endsWith(file_list, "R1_fastqc")])) == 0 )) {
+        dir_fastqc_R1 <- paste0(patients_dir, "/", dir_list[p],"/", file_list[endsWith(file_list, "R1_fastqc")], sep="")
+      } else if (!(length(nchar(file_list[endsWith(file_list, "R1_001_fastqc")])) == 0 )) {
+        dir_fastqc_R1 <- paste0(patients_dir, "/", dir_list[p],"/", file_list[endsWith(file_list, "R1_001_fastqc")], sep="")
+      }
+
+      if(!(length(nchar(file_list[endsWith(file_list, "R2_fastqc")])) == 0 )) {
+        dir_fastqc_R2 <- paste0(patients_dir, "/", dir_list[p],"/", file_list[endsWith(file_list, "R2_fastqc")], sep="")
+      } else if(!(length(nchar(file_list[endsWith(file_list, "R2_001_fastqc")])) == 0 )) {
+        dir_fastqc_R2 <- paste0(patients_dir, "/", dir_list[p],"/", file_list[endsWith(file_list, "R2_001_fastqc")], sep="")
+      }
+
+      dir_fastq_R1 <- paste0(patients_dir, "/", dir_list[p],"/", file_list[endsWith(file_list, "R1.fastq.gz")], sep="")
+      dir_fastq_R2 <- paste0(patients_dir, "/", dir_list[p],"/", file_list[endsWith(file_list, "R2.fastq.gz")], sep="")
+
 
     } else {
       file_list <- list.files(sprintf("%s/%s/trimmed", patients_dir, dir_list[p]))
@@ -136,7 +148,16 @@ plotFastQC_PBSQ <- function(patients_dir, trimmed = FALSE) {
 
     #promedio la mean de R1 y R2 para poder tener una sola línea por cada paciente
     Per_base_sequence_quality <- Per_base_sequence_quality_R1
-    Per_base_sequence_quality$Mean <- ((Per_base_sequence_quality_R1$Mean + Per_base_sequence_quality_R2$Mean) / 2)
+    #Per_base_sequence_quality$Mean <- ((Per_base_sequence_quality_R1$Mean + Per_base_sequence_quality_R2$Mean) / 2)
+
+    if (R == "R2") {
+      Per_base_sequence_quality$Mean <- Per_base_sequence_quality_R2$Mean
+    } else if ( R == "both" | R == "R1R2") {
+      Per_base_sequence_quality$Mean <- ((Per_base_sequence_quality_R1$Mean + Per_base_sequence_quality_R2$Mean) / 2)
+    } else if (R == "R1") {
+      Per_base_sequence_quality$Mean <- Per_base_sequence_quality_R1$Mean
+    }
+
     Per_base_sequence_quality$Median <- ((Per_base_sequence_quality_R1$Median + Per_base_sequence_quality_R2$Median) / 2)
     Per_base_sequence_quality$`10th Percentile` <- ((Per_base_sequence_quality_R1$`10th Percentile`  + Per_base_sequence_quality_R2$`10th Percentile` ) / 2)
     Per_base_sequence_quality$`90th Percentile` <- ((Per_base_sequence_quality_R1$`90th Percentile`  + Per_base_sequence_quality_R2$`90th Percentile` ) / 2)

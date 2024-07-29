@@ -2,7 +2,7 @@
 % Please edit documentation in R/downloadHG38.R
 \name{indexRefSTAR}
 \alias{indexRefSTAR}
-\title{index Ref STAR}
+\title{index Reference genome with STAR}
 \usage{
 indexRefSTAR(AnnotationHG38, FastaHG38)
 }

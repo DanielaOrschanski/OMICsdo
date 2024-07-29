@@ -15,12 +15,17 @@
     write("",file = sprintf("%s/OMICsdoSof/path_to_soft.txt", libPath))
   }
 
+  omicsdo_sof <<- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
+
   check_packages()
 
   downloadFastQC()
   downloadTrimGalore()
   downloadSTAR()
   downloadArriba()
+  downloadBWA()
+  #downloadGATK()
+  #downloadPICARD()
 
 }
 
@@ -468,4 +473,281 @@ On the Linux command-line print:
     }
   )
 }
+
+
+
+
+################################################################
+# CNVS ##################################3
+########################################################
+
+
+# BWA
+#' @title downloadBWA
+#' @description Downloads and decompresses the BWA software
+#' @return The path where the .exe file is
+downloadBWA <- function() {
+  omicsdo_sof <- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
+  print(omicsdo_sof)
+  #omicsdo_sof <- sprintf("%s/OMICsdoSof", Sys.getenv('R_LIBS_USER'))
+
+  tryCatch(
+    expr = {
+      system(sprintf('%s/BWA/usr/bin/bwa', omicsdo_sof))
+    },
+    error = function(e) {
+      message("Installation of BWA will now begin. Check if all the required packages are downloaded.")
+      print(e)
+
+      dir.create(sprintf("%s/BWA", omicsdo_sof))
+
+      bwa_url1 <- "https://download.opensuse.org/repositories/home:/vojtaeus/15.4/x86_64/bwa-0.7.17-lp154.6.1.x86_64.rpm"
+      bwa_dir1 <- file.path(omicsdo_sof, "BWA")
+      system2("wget", args = c(bwa_url1, "-P", bwa_dir1), wait = TRUE, stdout = NULL, stderr = NULL)
+      system2("rpm2cpio", sprintf("%s/bwa-0.7.17-lp154.6.1.x86_64.rpm | cpio -D %s -idmv", bwa_dir1, bwa_dir1), wait = TRUE)
+
+      dir.create(sprintf("%s/BWA/bwa-0.7.17-lp154.6.1.src", omicsdo_sof))
+      bwa_url2 <-"https://download.opensuse.org/repositories/home:/vojtaeus/15.4/src/bwa-0.7.17-lp154.6.1.src.rpm"
+      bwa_dir2 <- file.path(omicsdo_sof, "BWA/bwa-0.7.17-lp154.6.1.src")
+      system2("wget", args = c(bwa_url2, "-P", bwa_dir2), wait = TRUE, stdout = NULL, stderr = NULL)
+      system2("rpm2cpio", sprintf("%s/bwa-0.7.17-lp154.6.1.src.rpm | cpio -D %s -idmv", bwa_dir2, bwa_dir2), wait = TRUE)
+
+      bwa_url3 <-"https://download.opensuse.org/repositories/home:/vojtaeus/15.4/i586/bwa-0.7.17-lp154.6.1.i586.rpm"
+      system2("wget", args = c(bwa_url3, "-P", bwa_dir1), wait = TRUE, stdout = NULL, stderr = NULL)
+      system2("rpm2cpio", sprintf("%s/bwa-0.7.17-lp154.6.1.i586.rpm | cpio -D %s -idmv", bwa_dir1, bwa_dir1), wait = TRUE)
+
+      #Escribo el path en el txt
+      softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+      BWA <- sprintf('%s/BWA/usr/bin/bwa', omicsdo_sof)
+      softwares_actualizado <- c(softwares, sprintf("BWA %s", BWA))
+      write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+
+    },
+    warning = function(w) {
+      message("Installation of BWA will now begin. Check if all the required packages are downloaded.")
+
+      dir.create(sprintf("%s/BWA", omicsdo_sof))
+
+      bwa_url1 <- "https://download.opensuse.org/repositories/home:/vojtaeus/15.4/x86_64/bwa-0.7.17-lp154.6.1.x86_64.rpm"
+      bwa_dir1 <- file.path(omicsdo_sof, "BWA")
+      system2("wget", args = c(bwa_url1, "-P", bwa_dir1), wait = TRUE, stdout = NULL, stderr = NULL)
+      system2("rpm2cpio", sprintf("%s/bwa-0.7.17-lp154.6.1.x86_64.rpm | cpio -D %s -idmv", bwa_dir1, bwa_dir1), wait = TRUE)
+
+      dir.create(sprintf("%s/BWA/bwa-0.7.17-lp154.6.1.src", omicsdo_sof))
+      bwa_url2 <-"https://download.opensuse.org/repositories/home:/vojtaeus/15.4/src/bwa-0.7.17-lp154.6.1.src.rpm"
+      bwa_dir2 <- file.path(omicsdo_sof, "BWA/bwa-0.7.17-lp154.6.1.src")
+      system2("wget", args = c(bwa_url2, "-P", bwa_dir2), wait = TRUE, stdout = NULL, stderr = NULL)
+      system2("rpm2cpio", sprintf("%s/bwa-0.7.17-lp154.6.1.src.rpm | cpio -D %s -idmv", bwa_dir2, bwa_dir2), wait = TRUE)
+
+      bwa_url3 <-"https://download.opensuse.org/repositories/home:/vojtaeus/15.4/i586/bwa-0.7.17-lp154.6.1.i586.rpm"
+      system2("wget", args = c(bwa_url3, "-P", bwa_dir1), wait = TRUE, stdout = NULL, stderr = NULL)
+      system2("rpm2cpio", sprintf("%s/bwa-0.7.17-lp154.6.1.i586.rpm | cpio -D %s -idmv", bwa_dir1, bwa_dir1), wait = TRUE)
+
+      #Escribo el path en el txt
+      softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+      BWA <- sprintf('%s/BWA/usr/bin/bwa', omicsdo_sof)
+      softwares_actualizado <- c(softwares, sprintf("BWA %s", BWA))
+      write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+
+    },
+
+    finally = {
+      BWA <<- sprintf('%s/BWA/usr/bin/bwa', omicsdo_sof)
+      message("-.Message from BWA")
+    }
+  )
+
+  return(sprintf('%s/BWA/usr/bin/bwa', omicsdo_sof))
+}
+
+# GATK
+#' @title downloadGATK
+#' @description Downloads and decompresses the GATK software
+#' @return The path where the .exe file is located
+downloadGATK <- function() {
+  omicsdo_sof <- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
+  #omicsdo_sof <- sprintf("%s/OMICsdoSof", Sys.getenv('R_LIBS_USER'))
+  tryCatch(
+    expr = {
+      system(sprintf('java -jar %s/GATK/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar', omicsdo_sof))
+    },
+    error = function(e) {
+      message("Installation of GATK will now begin. Check if all the required packages are downloaded.")
+      print(e)
+      dir.create(sprintf("%s/GATK", omicsdo_sof))
+      URL <- 'https://github.com/broadinstitute/gatk/releases/download/4.3.0.0/gatk-4.3.0.0.zip'
+      system2("wget", args = c(URL, "-P", paste(omicsdo_sof, "/GATK", sep="")), wait = TRUE, stdout = NULL, stderr = NULL)
+      file <- basename(URL)
+      file_dir <- paste(omicsdo_sof, "/GATK/", file , sep = "")
+      filedc <- substr(file, start = 0, stop = (nchar(file) - 4))
+      unzip(zipfile = file_dir, exdir = paste(omicsdo_sof, "/GATK", sep=""))
+
+      #Escribo el path en el txt
+      softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+      GATK <- sprintf('%s/GATK/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar', omicsdo_sof)
+      softwares_actualizado <- c(softwares, sprintf("GATK %s", GATK))
+      write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+
+    },
+    warning = function(w) {
+      message("Installation of GATK will now begin. Check if all the required packages are downloaded.")
+      dir.create(sprintf("%s/GATK", omicsdo_sof))
+      URL <- 'https://github.com/broadinstitute/gatk/releases/download/4.3.0.0/gatk-4.3.0.0.zip'
+      system2("wget", args = c(URL, "-P", paste(omicsdo_sof, "/GATK", sep="")), wait = TRUE, stdout = NULL, stderr = NULL)
+      file <- basename(URL)
+      file_dir <- paste(omicsdo_sof, "/GATK/", file , sep = "")
+      filedc <- substr(file, start = 0, stop = (nchar(file) - 4))
+      unzip(zipfile = file_dir, exdir = paste(omicsdo_sof, "/GATK", sep=""))
+
+      #Escribo el path en el txt
+      softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+      GATK <- sprintf('%s/GATK/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar', omicsdo_sof)
+      softwares_actualizado <- c(softwares, sprintf("GATK %s", GATK))
+      write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+
+    },
+    finally = {
+      GATK <<- sprintf('%s/GATK/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar', omicsdo_sof)
+      message("-.Message from GATK")
+    }
+  )
+
+  return(sprintf('%s/GATK/%s/gatk-package-4.3.0.0-local.jar', omicsdo_sof, filedc))
+}
+
+
+# PICARD
+#' @title downloadPICARD
+#' @description Downloads and decompresses the PICARD software
+#' @return The path where the .exe file is located
+downloadPICARD <- function() {
+
+  omicsdo_sof <- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
+
+  tryCatch(
+    expr = {
+      system(sprintf('java -jar %s/PICARD/picard-2.27.5/picard.jar', omicsdo_sof))
+    },
+    error = function(e) {
+      message("Installation of PICARD will now begin. Check if all the required packages are downloaded.")
+      print(e)
+      dir.create(sprintf("%s/PICARD", omicsdo_sof))
+      URL <- "https://github.com/broadinstitute/picard/archive/refs/tags/2.27.5.tar.gz"
+      system2("wget", args = c(URL, "-P", paste(omicsdo_sof, "/PICARD", sep="")), wait = TRUE, stdout = NULL, stderr = NULL)
+      system2("gzip" , sprintf("-d %s/PICARD/2.27.5.tar.gz", omicsdo_sof))
+      system2("tar" , sprintf("-xvf %s/PICARD/2.27.5.tar -C %s/PICARD", omicsdo_sof, omicsdo_sof))
+      file.remove(sprintf("%s/PICARD/2.27.5.tar", omicsdo_sof))
+
+      URL2 <- "https://github.com/broadinstitute/picard/releases/download/2.27.5/picard.jar"
+      dir2 <- sprintf("%s/PICARD/picard-2.27.5", omicsdo_sof)
+      system2("wget", args = c(URL2, "-P", dir2), wait = TRUE, stdout = NULL, stderr = NULL)
+
+      #Escribo el path en el txt
+      softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+      PICARD <- sprintf('%s/PICARD/picard-2.27.5/picard.jar', omicsdo_sof)
+      softwares_actualizado <- c(softwares, sprintf("PICARD %s", PICARD))
+      write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+
+    },
+    warning = function(w) {
+      message("Installation of PICARD will now begin. Check if all the required packages are downloaded.")
+      dir.create(sprintf("%s/PICARD", omicsdo_sof))
+      URL <- "https://github.com/broadinstitute/picard/archive/refs/tags/2.27.5.tar.gz"
+      system2("wget", args = c(URL, "-P", paste(omicsdo_sof, "/PICARD", sep="")), wait = TRUE, stdout = NULL, stderr = NULL)
+      system2("gzip" , sprintf("-d %s/PICARD/2.27.5.tar.gz", omicsdo_sof))
+      system2("tar" , sprintf("-xvf %s/PICARD/2.27.5.tar -C %s/PICARD", omicsdo_sof, omicsdo_sof))
+      file.remove(sprintf("%s/PICARD/2.27.5.tar", omicsdo_sof))
+
+      URL2 <- "https://github.com/broadinstitute/picard/releases/download/2.27.5/picard.jar"
+      dir2 <- sprintf("%s/PICARD/picard-2.27.5", omicsdo_sof)
+      system2("wget", args = c(URL2, "-P", dir2), wait = TRUE, stdout = NULL, stderr = NULL)
+
+      #Escribo el path en el txt
+      softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+      PICARD <- sprintf('%s/PICARD/picard-2.27.5/picard.jar', omicsdo_sof)
+      softwares_actualizado <- c(softwares, sprintf("PICARD %s", PICARD))
+      write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+
+    },
+
+    finally = {
+      PICARD <<- sprintf('%s/PICARD/picard-2.27.5/picard.jar', omicsdo_sof)
+      message("-.Message from PICARD")
+    }
+  )
+
+  return(sprintf('%s/PICARD/picard-2.27.5/picard.jar', omicsdo_sof))
+}
+
+
+# SAMTOOLS
+#' @title downloadSamtools
+#' @description Downloads and decompresses the Samtools software
+#' @return The path where the .exe file is located
+downloadSamtools <- function() {
+
+  tryCatch(
+    {
+      system2(sprintf("%s/Samtools/samtools-1.16.1/samtools", omicsdo_sof))
+    },
+    error = function(e) {
+      message("The installation of Samtools will begin now. Check if all required packages are downloaded.")
+      print(e)
+
+      dir.create(sprintf("%s/Samtools", omicsdo_sof))
+      dir <- sprintf("%s/Samtools", omicsdo_sof)
+      URL <- "https://github.com/samtools/samtools/releases/download/1.16.1/samtools-1.16.1.tar.bz2"
+      system2("wget", args = c(URL, "-P", dir), wait = TRUE, stdout = NULL, stderr = NULL)
+
+      system2("bzip2", sprintf("-d %s/Samtools/samtools-1.16.1.tar.bz2", omicsdo_sof))
+      system2("tar", c("-xvf", sprintf("%s/Samtools/%s -C %s", omicsdo_sof, list.files(sprintf("%s/Samtools", omicsdo_sof)), dir)))
+
+      file.remove(sprintf("%s/samtools-1.16.1.tar", dir))
+
+      samtools_dir <- sprintf("%s/samtools-1.16.1", dir)
+      system(paste("cd", shQuote(samtools_dir), "&& ./configure"))
+      system(paste("cd", shQuote(samtools_dir), "&& make"))
+
+      #Escribo el path en el txt
+      softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+      Samtools <- sprintf("%s/Samtools/samtools-1.16.1/samtools", omicsdo_sof)
+      softwares_actualizado <- c(softwares, sprintf("Samtools %s", Samtools))
+      write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+
+    },
+    warning = function(w) {
+      message("The installation of Samtools will begin now. Check if all required packages are downloaded.")
+
+      dir.create(sprintf("%s/Samtools", omicsdo_sof))
+      dir <- sprintf("%s/Samtools", omicsdo_sof)
+      URL <- "https://github.com/samtools/samtools/releases/download/1.16.1/samtools-1.16.1.tar.bz2"
+      system2("wget", args = c(URL, "-P", dir), wait = TRUE, stdout = NULL, stderr = NULL)
+
+      system2("bzip2", sprintf("-d %s/Samtools/samtools-1.16.1.tar.bz2", omicsdo_sof))
+      system2("tar", c("-xvf", sprintf("%s/Samtools/%s -C %s", omicsdo_sof, list.files(sprintf("%s/Samtools", omicsdo_sof)), dir)))
+
+      file.remove(sprintf("%s/samtools-1.16.1.tar", dir))
+
+      samtools_dir <- sprintf("%s/samtools-1.16.1", dir)
+      system(paste("cd", shQuote(samtools_dir), "&& ./configure"))
+      system(paste("cd", shQuote(samtools_dir), "&& make"))
+
+      #Escribo el path en el txt
+      softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+      Samtools <- sprintf("%s/Samtools/samtools-1.16.1/samtools", omicsdo_sof)
+      softwares_actualizado <- c(softwares, sprintf("Samtools %s", Samtools))
+      write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+
+    },
+
+    finally = {
+      message("-.Message from Samtools")
+      Samtools <<- sprintf("%s/Samtools/samtools-1.16.1/samtools", omicsdo_sof)
+    }
+  )
+
+  return(sprintf("%s/Samtools/samtools-1.16.1/samtools", omicsdo_sof))
+}
+
+
 

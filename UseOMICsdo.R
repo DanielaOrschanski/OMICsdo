@@ -1,4 +1,203 @@
+library(devtools)
+#devtools::create(path = "/home/daniela/OMICsdo")
+setwd(sprintf("%s/OMICsdoSof", Sys.getenv('R_LIBS_USER')))
+setwd("/media/16TBDisk/Daniela/OMICsdo")
+devtools::build()
 
+#devtools::load_all() #para asegurarte de que se está ejecutando correctamente
+devtools::document()
+
+devtools::install()
+#devtools::install_local("/home/daniela/OMICsdo_0.0.0.9000.tar.gz")
+
+library(OMICsdo)
+unlink("~/R/x86_64-pc-linux-gnu-library/4.1/00LOCK-OMICsdo", recursive = TRUE)
+unlink("~/R/x86_64-pc-linux-gnu-library/4.1/OMICsdo", recursive = TRUE)
+#restart R
+
+library(OMICsdo)
+
+
+
+getwd()
+setwd("/media/16TBDisk")
+
+setwd("/media/16TBDisk/Daniela")
+
+library(googledrive)
+
+#https://drive.google.com/file/d/1jGi4nOygTy7L4PLlk5n4NEIj4nhKTLRj/view
+url <- "https://drive.google.com/file/d/1LkoJVSRkboRcLdt2Ys1CLH3xeBgJsTbT/view?usp=sharing"
+# ID del documento en Google Drive
+file_id <- basename(dirname(url))
+
+# Ruta local donde deseas guardar el archivo descargado
+local_path <- "/media/16TBDisk/Daniela/Muestras/Br0258_R1.fastq.gz"
+
+# Construir la URL de descarga directa
+download_url <- paste0("https://drive.google.com/uc?id=", file_id)
+
+# Descargar el archivo
+download.file(download_url, destfile = local_path, mode = "wb")
+
+
+#Para Informe  ------------------------
+library(OMICsdo)
+plotFastQC_PBSQ(patients_dir = "/media/16TBDisk/Daniela/MuestrasMama", trimmed = TRUE)
+plotFastQC_PBSQ(patients_dir = "/media/16TBDisk/Daniela/MuestrasMama", trimmed = FALSE)
+
+plotFastQC_PBSQ(patients_dir = "/media/16TBDisk/Daniela/MuestrasColon", trimmed = TRUE)
+plotFastQC_PBSQ(patients_dir = "/media/16TBDisk/Daniela/MuestrasColon", trimmed = FALSE)
+
+plotFastQC_PBSQ(patients_dir = "/media/16TBDisk/Daniela/MuestrasColonProblemas/1517", trimmed = TRUE)
+plotFastQC_PBSQ(patients_dir = "/media/16TBDisk/Daniela/MuestrasColonProblemas/1517", trimmed = FALSE)
+
+
+counts <- FeatureCount_Report$counts
+
+
+BiocManager::install("qckitfastq")
+library(qckitfastq)
+library(readr)
+library(stringr)
+
+runFastQC(patient_dir = "~/Colombia/MuestrasColombia")
+
+scores_qc <- calculate_qc_scores(patients_dir = "/media/16TBDisk/Daniela/MuestrasColon", trimmed = FALSE)
+scores_qc_mama <- calculate_qc_scores(patients_dir = "/media/16TBDisk/Daniela/MuestrasMama", trimmed = FALSE)
+
+
+scores_qc_colon <- scores_qc[!(scores_qc$Sample== "Co1517"),]
+summary(scores_qc_colon)
+summary(scores_qc_mama)
+
+#Guardarlos en excel
+library(openxlsx)
+wb <- createWorkbook()
+
+addWorksheet(wb, "QC_Colon")
+writeData(wb, "QC_Colon", scores_qc_colon, startCol = 1, startRow = 1)
+
+addWorksheet(wb, "QC_Mama")
+writeData(wb, "QC_Mama", scores_qc_mama, startCol = 1, startRow = 1)
+
+saveWorkbook(wb, "/media/16TBDisk/Daniela/MetricasQC_60muestras.xlsx")
+
+calculate_qc_scores <- function(patients_dir, trimmed = FALSE){
+
+  scores_qc <- data.frame("Sample"= c(), "Q_Mean" = c(), "%_>=Q30"= c())
+  i=1
+  dir_list <- list.dirs(path = patients_dir, full.names = TRUE, recursive = FALSE)
+  cant_patients <- length(dir_list)
+
+  for (p in dir_list) {
+    #p <- dir_list[[1]]
+    print(p)
+    if  (trimmed == TRUE) {
+      file_list <- list.files(sprintf("%s/trimmed/", p))
+      gzip <- ifelse(length(nchar(file_list[endsWith(file_list, "val_1.fq.gz")])) == 0, "", ".gz")
+      fileR1 <- paste0(p, "/trimmed/", file_list[endsWith(file_list, sprintf("val_1.fq%s", gzip))], sep="")
+      fileR2 <- paste0(p, "/trimmed/", file_list[endsWith(file_list, sprintf("val_2.fq%s", gzip))], sep="")
+    } else {
+      file_list <- list.files(p)
+      gzip <- ifelse(length(nchar(file_list[endsWith(file_list, "R1.fastq.gz")])) == 0, "", ".gz")
+      fileR1 <- paste0(p, "/", file_list[endsWith(file_list, sprintf("R1.fastq%s", gzip))], sep="")
+      fileR2 <- paste0(p, "/", file_list[endsWith(file_list, sprintf("R2.fastq%s", gzip))], sep="")
+    }
+
+    if ((length(nchar(fileR1)) == 0) | (length(nchar(fileR2)) == 0)) {
+      stop("There are no fastq files in this directory")
+    }
+
+    QC <- qual_score_per_read(fileR1)
+    mean <- mean(QC$mu_per_read)
+    Q30 <- (sum(QC$mu_per_read>=30)/length(QC$mu_per_read))*100
+
+    scores_qc[i, "Sample"] <- basename(p)
+    scores_qc[i, "Q_Mean"] <- mean
+    scores_qc[i, "%_>=Q30"] <- Q30
+
+    i= i+1
+  }
+  saveRDS(scores_qc, file= sprintf("%s/scores_QC.rds", patients_dir))
+  return(scores_qc)
+
+}
+
+
+#####################################################################################3
+
+patient_dir <- "~/Biota/MuestrasLeo/80"
+patient_dir <- "~/Colombia/MuestrasColombia"
+
+PBSQ_Colombia <- ModuloPBSQ(patient_dir)
+PBSQ_Heritas <- ModuloPBSQ(patient_dir)
+
+mean(PBSQ_Colombia$Mean)
+mean(PBSQ_Heritas$Mean)
+
+#Recorro cada paciente para guardar las tablas para el grafico y sacar el promedio de las medias.
+ModuloPBSQ <- function(patient_dir, trimmed= FALSE) {
+
+  if (trimmed == FALSE) {
+    file_list <- list.files(patient_dir)
+    dir_fastqc_R1 <- paste0(patient_dir, "/", file_list[endsWith(file_list, "R1_001_fastqc")], sep="")
+    dir_fastqc_R2 <- paste0(patient_dir, "/", file_list[endsWith(file_list, "R2_001_fastqc")], sep="")
+
+  } else {
+    file_list <- list.files(patient_dir)
+    dir_fastqc_R1 <- paste0(patient_dir, "/", file_list[endsWith(file_list, "val_1_fastqc")], sep="")
+    dir_fastqc_R2 <- paste0(patient_dir, "/", file_list[endsWith(file_list, "val_2_fastqc")], sep="")
+  }
+
+  if( length(nchar(dir_fastqc_R1)) == 0 | length(nchar(dir_fastqc_R2)) == 0 ) {
+    stop("There is no fastQC file in this folder. Try trimmed == FALSE.")
+  }
+  print(basename(dir_fastqc_R1))
+
+  report_R1 <- read_file(paste0(dir_fastqc_R1, "/fastqc_data.txt", sep=""))
+  module_R1 <- str_split(report_R1, ">>")
+
+
+  print(basename(dir_fastqc_R2))
+  report_R2 <- read_file(paste0(dir_fastqc_R2, "/fastqc_data.txt", sep=""))
+  module_R2 <- str_split(report_R2, ">>")
+
+  #Plot principal:
+  Per_base_sequence_quality_R1 <- create_FQCdata(module_R1[[1]][4])
+  order_fact <- Per_base_sequence_quality_R1$Base
+  Per_base_sequence_quality_R1$Base <- factor(Per_base_sequence_quality_R1$Base, levels = order_fact)
+
+  Per_base_sequence_quality_R2 <- create_FQCdata(module_R2[[1]][4])
+  order_fact <- Per_base_sequence_quality_R2$Base
+  Per_base_sequence_quality_R2$Base <- factor(Per_base_sequence_quality_R2$Base, levels = order_fact)
+
+  #promedio la mean de R1 y R2 para poder tener una sola línea por cada paciente
+  Per_base_sequence_quality <- Per_base_sequence_quality_R1
+  Per_base_sequence_quality$Mean <- ((Per_base_sequence_quality_R1$Mean + Per_base_sequence_quality_R2$Mean) / 2)
+
+  message(sprintf("The module of patient %s for PBSQ graph has been loaded", patient_dir))
+  return(Per_base_sequence_quality)
+}
+
+mean(Per_base_sequence_quality$Mean)
+
+
+
+#' @title create FastQC data
+#' @description Prepare the data for plotting
+#' @param dat data from module of FastQC output
+create_FQCdata <- function(dat) {
+  DBname <- read_lines(dat)
+  len <- length(DBname)
+  DBname <- DBname[2:len]
+  DBname <- read.table(text = DBname, sep = "\t")
+  colnames(DBname) <- strsplit(read_lines(dat)[2],"\t", fixed=TRUE)[[1]]
+  colnames(DBname)[1] <- str_replace(colnames(DBname)[1], "#", "")
+  return(DBname)
+}
+
+#####################################################################
 #Control de calidad para reporte: ########################################################3
 runFastQC(patient_dir = "/media/16TBDisk/Daniela/MuestrasColon4/Co1525")
 plotFastQC_PBSQ(patients_dir = "/media/16TBDisk/Daniela/MuestrasColonGuada", trimmed = TRUE)
@@ -53,6 +252,31 @@ Todos_counts <- cbind(count_mama_guada, count_colon_guada, count_mama,
                       count_colon, count_colon2, count_colon3, count_colon4)
 
 saveRDS(Todos_counts, file= "/media/16TBDisk/Daniela/Counts_91.rds")
+
+
+count_mama_guada <- readRDS("/media/16TBDisk/Daniela/MuestrasMamaGuada/FeatureCount_Report.rds")
+count_mama_guada <- count_mama_guada$counts
+count_colon_guada <- readRDS("/media/16TBDisk/Daniela/MuestrasColonGuada/FeatureCount_Report.rds")
+count_colon_guada <- count_colon_guada$counts
+
+Todos_counts <- as.data.frame(cbind(count_mama_guada, count_colon_guada))
+colnames(Todos_counts)
+colnames(Todos_counts) <- sub("_Aligned_out.bam", "", colnames(Todos_counts))
+saveRDS(Todos_counts, file= "/media/16TBDisk/Daniela/Counts_20.rds")
+
+m <-c( "Br0886", "Br0442", "Br0370", "Br0382", "Br0732", "Br0350", "Br0361",
+       "Br1430", "Br1316", "Br0316", "Br0401",
+       "Co1278", "Co1109", "Co1099",
+       "Co1507", "Co1254", "Co1460", "Co1491", "Co0173", "Co0199",
+       "Co1102")
+colnames(Todos_counts)%in% m
+T<- Todos_counts[, colnames(Todos_counts)%in% m]
+
+
+wb <- createWorkbook()
+addWorksheet(wb, "Expresion20")
+writeData(wb, "Expresion20", T, startCol = 1, startRow = 1)
+saveWorkbook(wb, "/media/16TBDisk/Daniela/MatrizExpresion_20.xlsx")
 
 
 #################################
@@ -123,7 +347,6 @@ ModuloPBSQ <- function(patient_dir, trimmed= FALSE) {
 mean(Per_base_sequence_quality$Mean)
 
 
-
 #' @title create FastQC data
 #' @description Prepare the data for plotting
 #' @param dat data from module of FastQC output
@@ -136,3 +359,6 @@ create_FQCdata <- function(dat) {
   colnames(DBname)[1] <- str_replace(colnames(DBname)[1], "#", "")
   return(DBname)
 }
+
+RNAseqP("/media/16TBDisk/Daniela/Environ/TodoMama", RunARRIBA = TRUE)
+RNAseqP("/media/16TBDisk/Daniela/Environ/TodoColon", RunARRIBA = TRUE)

@@ -9,6 +9,7 @@ RNAseqP(
   genomeRef = "HG38",
   fastQC_after_trim = FALSE,
   plot_FastQC_trim = FALSE,
+  R = "R1R2",
   trim_quality = 30,
   RunARRIBA = FALSE,
   RunFeatureCounts = TRUE,
@@ -20,7 +21,11 @@ RNAseqP(
 
 \item{fastQC_after_trim}{lfnrks}
 
-\item{RunARRIBA}{kvsfj}
+\item{plot_FastQC_trim}{set to TRUE if you want to make a QC plot of the trimmed files.}
+
+\item{R}{indicates if the curve in the QC plot will be constructed with R1 (R= "R1"), R2 (R= "R2") o both (R= "R1R2").}
+
+\item{RunARRIBA}{set to TRUE if you want to run the ARRIBA software.}
 
 \item{RunFeatureCounts}{vshbfj}
 

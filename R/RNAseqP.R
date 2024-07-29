@@ -1,9 +1,11 @@
 #' @title RNAseqP
 #' @description Executes the
-#' @param patient_dir Path of the directory that contains R1 and R2 fastq files. It can be either the "trimmed" folder or the original folder.
+#' @param patient_dir Path of the directory that contains R1 and R2 fastq files. It can be either the "trimmed" folder or the original folder. No tiene que tener espacios!!
 #' @param genomeRef indicated which reference will be used. Write "HG38" or ...
 #' @param fastQC_after_trim lfnrks
-#' @param RunARRIBA kvsfj
+#' @param plot_FastQC_trim set to TRUE if you want to make a QC plot of the trimmed files.
+#' @param R indicates if the curve in the QC plot will be constructed with R1 (R= "R1"), R2 (R= "R2") o both (R= "R1R2").
+#' @param RunARRIBA set to TRUE if you want to run the ARRIBA software.
 #' @param RunFeatureCounts vshbfj
 #' @param RunMIXCR kvsjhbfj
 #' @return softwares that were runned and the time they took.
@@ -12,6 +14,7 @@ RNAseqP <- function(patients_dir,
                     genomeRef = "HG38",
                     fastQC_after_trim = FALSE,
                     plot_FastQC_trim = FALSE,
+                    R = "R1R2",
                     trim_quality = 30,
                     RunARRIBA = FALSE,
                     RunFeatureCounts = TRUE,
@@ -30,6 +33,7 @@ RNAseqP <- function(patients_dir,
   file_list <- list.dirs(path = patients_dir, full.names = FALSE, recursive = FALSE)
 
   #Functions applied to each patient one by one
+  #patient <- file_list[1]
   for (patient in file_list) {
     patient_dir <- sprintf("%s/%s", patients_dir, patient)
     #FASTQC
@@ -74,17 +78,21 @@ RNAseqP <- function(patients_dir,
     message(sprintf("The patient %s has already been processed with STAR", patient))
 
     #ARRIBA
-    if(RunARRIBA == TRUE) {
-      ARRIBA_time <- system.time(runARRIBA(patient_dir_trim))
-      times_registered <- c(times_registered, ARRIBA_time[[3]])
-      softwares_runned <- c(softwares_runned, "ARRIBA")
-      message(sprintf("The patient %s has already been processed with ARRIBA", patient))
+    if (RunARRIBA == TRUE) {
+      tryCatch({
+        ARRIBA_time <- runARRIBA(patient_dir_trim)
+        #times_registered <- c(times_registered, ARRIBA_time[[3]])
+        #softwares_runned <- c(softwares_runned, "ARRIBA")
+        message(sprintf("The patient %s has already been processed with ARRIBA", patient))
+      }, error = function(e) {
+        message(sprintf("An error occurred while processing patient %s with ARRIBA: %s", patient, e$message))
+      })
     }
 
   }
 
   #Functions applied to all the patients together:
-  PLOT_time <- system.time(plotFastQC_PBSQ(patients_dir, trimmed = FALSE))
+  PLOT_time <- system.time(plotFastQC_PBSQ(patients_dir, trimmed = FALSE, R= R))
   times_registered <- c(times_registered, PLOT_time[[3]])
   softwares_runned <- c(softwares_runned, "plot_PBSQ")
   message("The PBSQ plot has been generated!")
@@ -109,7 +117,7 @@ RNAseqP <- function(patients_dir,
     message("Feature Counts' analysis has finished!")
   }
 
-  TimeRegistration <- data.frame("Software" = softwares_runned, "Time" = times_registered)
+  #TimeRegistration <- data.frame("Software" = softwares_runned, "Time" = times_registered)
 
   return(c(softwares_runned, times_registered))
 
