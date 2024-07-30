@@ -1,4 +1,11 @@
-calculate_qc_scores <- function(patients_dir, trimmed = FALSE){
+#' @title Calculate QC metrics from sequencing - FastQC
+#' @description Executes tkjvnfkd.
+#' @param patients_dir Path of the directory that contains R1 and R2 fastq files. It can be either the "trimmed" folder or the original folder.
+#' @param trimmed kjvdfk
+#' @return scores_qc df with metrics from FastQC
+#' @export
+
+calculateQCMetricsSeq <- function(patients_dir, trimmed = FALSE){
   library(qckitfastq)
   scores_qc <- data.frame("Sample"= c(), "Q_Mean_R1" = c(), "%_>=Q30_R1"= c(),
                           "Q_Mean_R2" = c(), "%_>=Q30_R2"= c())

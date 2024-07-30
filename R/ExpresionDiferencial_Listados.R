@@ -38,20 +38,26 @@ ExpresionDiferencial_Listados <- function(b, df_listado, Grupos, tejido, lfc = 1
   #plot MDS --------------------------------------------------
   if (plotMDS == TRUE) {
     Sample_name <- b_G$samples$ID_ENVIRON
-    col.group <- group
+    col.group <- factor(b_G$samples[[categoria]])
     library(RColorBrewer)
     levels(col.group) <-  brewer.pal(nlevels(col.group), "Set1")
     col.group <- as.character(col.group)
+
+    subtiposL<- b_G$samples$Subtipo
+    subtiposL <- ifelse(subtiposL == "Luminal HER2", "HER2", subtiposL)
     plotMDS(cpm(b_G$counts, log=TRUE),
             labels=Sample_name,
+            #labels = subtiposL,
             col = col.group,
             dim.plot = c(1,2))
+
     title(main=sprintf("Sample groups:  %s y %s", unique(b_G$samples[[categoria]])[1], unique(b_G$samples[[categoria]])[2] ))
-    legend("topleft",
+    legend("topright",
            legend = unique(b_G$samples[[categoria]]),
            fill = unique(col.group),
            pch = 1,
            title = "Categoría")
+
   }
 
 
@@ -87,11 +93,13 @@ ExpresionDiferencial_Listados <- function(b, df_listado, Grupos, tejido, lfc = 1
 
   #Para el informe que quieren:
   #Informe_Mama <- data.frame(b_G$genes)
-  #Informe_Mama$p_value <- efit$p.value[,2]
-  #Informe_Mama$p_adj <- p.adjust(efit$p.value[,2], method="fdr")
-  #Informe_Mama$stat <- efit$t[,2]
-  #Informe_Mama$log2FC <- efit$coefficients[,2]
-  #Informe_Mama$stdev <- efit$stdev.unscaled[,2]
+  Informe_Mama <- as.data.frame(v$E)
+  Informe_Mama$p_value <- efit$p.value[,2]
+  Informe_Mama$p_adj <- p.adjust(efit$p.value[,2], method="fdr")
+  Informe_Mama$stat <- efit$t[,2]
+  Informe_Mama$log2FC <- efit$coefficients[,2]
+  Informe_Mama$stdev <- efit$stdev.unscaled[,2]
+  rownames(Informe_Mama) <- b_G$genes[rownames(Informe_Mama), 2]
 
   #Para cada columna del resto - ordenadas primero las de grupo A y dsp las del B:
 
@@ -101,13 +109,16 @@ ExpresionDiferencial_Listados <- function(b, df_listado, Grupos, tejido, lfc = 1
   #E_mama$ENSEMBL <- b_G$genes[rownames(E_mama), 3]
   #E_mama$SYMBOL <- b_G$genes[rownames(E_mama), 2]
 
-  write.xlsx(E_mama, file = sprintf("/media/4tb1/Daniela/Environ/Solicitud/MatrizExpresion_%s_%s.xlsx", tejido, Grupos), rowNames = TRUE)
-  #write.xlsx(E_mama, file = sprintf("/media/4tb1/Daniela/Environ/MatrizExpresion_61pacientes_Mama.xlsx"), rowNames = TRUE)
+  write.xlsx(E_mama, file = sprintf("/media/4tb1/Daniela/Environ/Solicitud/MatrizExpresion_%s_%s_lfc%s.xlsx", tejido, Grupos, lfc), rowNames = TRUE)
+  write.xlsx(Informe_Mama, file = sprintf("/media/4tb1/Daniela/Environ/Informe_%s_%s_lfc%s.xlsx", tejido, Grupos, lfc), rowNames = TRUE)
 
 
   # Buscamos un p-valor <0.05 entre los genes segun el group
   ps <- efit$p.value
   message(paste("la cantidad de genes diferenciales son: ", sum(efit$p.value[,2] < p)))
+  if(sum(efit$p.value[,2] < p) == 0) {
+    return(message("No se encuentran genes diferenciales, probar con un valor lfc más bajo"))
+  }
 
 
   #####################################################################3
@@ -175,7 +186,6 @@ ExpresionDiferencial_Listados <- function(b, df_listado, Grupos, tejido, lfc = 1
   if(plot_heatmaps == TRUE) {
     print(hm_split)
   }
-
 
   #gd <- as.data.frame(M[genes_diferenciales, ncol(M)])
   #rownames(gd) <- rownames(M[genes_diferenciales,])
