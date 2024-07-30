@@ -20,7 +20,7 @@
 
   omicsdo_sof <<- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
 
-  check_packages()
+  #check_packages()
 
   downloadFastQC()
   downloadTrimGalore()
