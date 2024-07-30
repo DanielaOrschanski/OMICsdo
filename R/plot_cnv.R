@@ -98,8 +98,6 @@ GetCNVsAnnotation <- function(chr, x, countThreshold =10){
 }
 
 
-cnvCalls <- all.exons
-
 GetAllExons <- function(cnvCalls, countThreshold =10){
   #chrs <- unique(cnvCalls$CNVs@CNV.calls$chromosome)
   chrs <- unique(cnvCalls@CNV.calls$chromosome)
