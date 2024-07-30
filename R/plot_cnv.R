@@ -51,8 +51,8 @@ plot_cnv <- function(CNV_calls) {
   return(graph)
 }
 
-x= all.exons
-chr =1
+#x= all.exons
+#chr =1
 GetCNVsAnnotation <- function(chr, x, countThreshold =10){
   anno <- x@annotations
   selected <- which(anno$chromosome == chr & (x@test + x@reference) *
