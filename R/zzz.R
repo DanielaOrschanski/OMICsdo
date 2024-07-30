@@ -489,6 +489,7 @@ On the Linux command-line print:
 #' @title downloadBWA
 #' @description Downloads and decompresses the BWA software
 #' @return The path where the .exe file is
+#' @export
 downloadBWA <- function() {
   omicsdo_sof <- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
   print(omicsdo_sof)
