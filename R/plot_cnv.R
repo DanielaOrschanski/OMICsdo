@@ -106,8 +106,6 @@ GetAllExons <- function(cnvCalls, countThreshold =10){
   return(invisible(chr.exons))
 }
 
-annot <- chr.exons[[1]]
-
 .PlotCNVchromosome <- function(annot,thLength=500, geneTable){
   ##assume chrome.bed
   # annot <- chr19
