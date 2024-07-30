@@ -51,8 +51,14 @@ plot_cnv <- function(CNV_calls) {
   return(graph)
 }
 
-x= all.exons
-chr =1
+#' @title Get CNVs annotation.
+#' @description Generates a graph that represents the CNVs detected. The user will be able to
+#' visualize the distribution, sizes, and positions of the variations within the whole mtDNA
+#' and the genes that are affected by them.
+#' @param chr dataframe that contains the information about the CNVs detected.
+#' @param countThreshold is a number
+#' @return lckerm wdkme
+#' @export
 GetCNVsAnnotation <- function(chr, x, countThreshold =10){
   anno <- x@annotations
   selected <- which(anno$chromosome == chr & (x@test + x@reference) *
@@ -92,8 +98,6 @@ GetCNVsAnnotation <- function(chr, x, countThreshold =10){
 }
 
 
-cnvCalls <- all.exons
-
 GetAllExons <- function(cnvCalls, countThreshold =10){
   #chrs <- unique(cnvCalls$CNVs@CNV.calls$chromosome)
   chrs <- unique(cnvCalls@CNV.calls$chromosome)
@@ -101,8 +105,6 @@ GetAllExons <- function(cnvCalls, countThreshold =10){
   names(chr.exons) <- chrs
   return(invisible(chr.exons))
 }
-
-annot <- chr.exons[[1]]
 
 .PlotCNVchromosome <- function(annot,thLength=500, geneTable){
   ##assume chrome.bed
