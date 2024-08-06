@@ -22,11 +22,11 @@
 
   #check_packages()
 
-  #downloadFastQC()
-  #downloadTrimGalore()
-  #downloadSTAR()
-  #downloadArriba()
-  #downloadBWA()
+  downloadFastQC()
+  downloadTrimGalore()
+  downloadSTAR()
+  downloadArriba()
+  downloadBWA()
   #downloadGATK()
   #downloadPICARD()
 
