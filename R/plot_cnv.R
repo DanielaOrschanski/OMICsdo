@@ -59,6 +59,9 @@ plot_cnv <- function(CNV_calls) {
 #' @param countThreshold is a number
 #' @return lckerm wdkme
 #' @export
+#'
+#x <- all.exons
+#chr <- 1
 GetCNVsAnnotation <- function(chr, x, countThreshold =10){
   anno <- x@annotations
   selected <- which(anno$chromosome == chr & (x@test + x@reference) *
@@ -98,7 +101,7 @@ GetCNVsAnnotation <- function(chr, x, countThreshold =10){
 }
 
 
-GetAllExons <- function(cnvCalls, countThreshold =10){
+GetAllExons <- function(cnvCalls = all.exons, countThreshold =10){
   #chrs <- unique(cnvCalls$CNVs@CNV.calls$chromosome)
   chrs <- unique(cnvCalls@CNV.calls$chromosome)
   chr.exons <- bplapply(chrs, GetCNVsAnnotation, x=cnvCalls, BPPARAM = bpparam())
@@ -106,7 +109,7 @@ GetAllExons <- function(cnvCalls, countThreshold =10){
   return(invisible(chr.exons))
 }
 
-.PlotCNVchromosome <- function(annot,thLength=500, geneTable){
+.PlotCNVchromosome <- function(annot = all.exons, thLength=500, geneTable){
   ##assume chrome.bed
   # annot <- chr19
   # thLength <- 500
@@ -127,10 +130,11 @@ GetAllExons <- function(cnvCalls, countThreshold =10){
   #}
 
 
+  annot <- GetCNVsAnnotation(chr = 1, x = all.exons)
   CNVs <- annot$CNVs
   CNVs$width <- (CNVs$end-CNVs$start)
   chr <- stringr::str_replace_all(annot$Exons$chromosome[1],"chr","Chr")
-  CNVs <- subset(CNVs,width > thLength)
+  CNVs <- subset(CNVs, width > thLength)
 
   annot <- annot$Exons
   ordm <- order(annot$middle)

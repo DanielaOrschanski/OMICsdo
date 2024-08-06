@@ -31,7 +31,7 @@ RNAseqP(
 
 \item{RunMIXCR}{kvsjhbfj}
 
-\item{patient_dir}{Path of the directory that contains R1 and R2 fastq files. It can be either the "trimmed" folder or the original folder.}
+\item{patient_dir}{Path of the directory that contains R1 and R2 fastq files. It can be either the "trimmed" folder or the original folder. No tiene que tener espacios!!}
 }
 \value{
 softwares that were runned and the time they took.

@@ -26,9 +26,9 @@ runFastQC <- function(patient_dir) {
 
   #Evita repetir el analisis si ya fue hecho
   if (startsWith(basename(patient_dir), "trimmed")) {
-    if (!(length(nchar(file_list[endsWith(file_list, "val_1_fastqc")])) == 0)) {
+    if (!(length(nchar(file_list[endsWith(file_list, "val_1_fastqc")])) == 0) & !(length(nchar(file_list[endsWith(file_list, "val_2_fastqc")])) == 0)) {
       message("The FastQC for this sample has already been done.")
-      return(paste0(patient_dir, "/", file_list[endsWith(file_list, "va_1_fastqc")], sep=""))
+      return(paste0(patient_dir, "/", file_list[endsWith(file_list, "val_1_fastqc")], sep=""))
     }
   } else {
     if ((length(nchar(file_list[endsWith(file_list, "R1_fastqc")])) != 0) & (length(nchar(file_list[endsWith(file_list, "R2_fastqc")])) != 0)) {
@@ -36,8 +36,6 @@ runFastQC <- function(patient_dir) {
       return(paste0(patient_dir, "/", file_list[endsWith(file_list, "R1_fastqc")], sep=""))
     }
   }
-
-
 
   #Ejecuta el FastQC R1
   system2(FastQC, fileR1)

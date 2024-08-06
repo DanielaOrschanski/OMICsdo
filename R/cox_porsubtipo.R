@@ -144,10 +144,10 @@ cox_porsubtipo <- function(mx, Grupos, listado = "", porSubtipo = TRUE) {
 # VENN COMPARANDO LOS TOP GENES ELEGIDOS EN CADA CASO #############
 ###################################################################
 
-cox_G18G19 <- list(CoxLasso_GeneFreq_G18G19_GenesDiferenciales, CoxLasso_GeneFreq_G18G19_HER2_,
-                   CoxLasso_GeneFreq_G18G19_Luminal_A_, CoxLasso_GeneFreq_G18G19_Luminal_B_,
-                   CoxLasso_GeneFreq_G18G19_Triple_Negativo_)
-out2 <- findIntersect(cox = cox_G18G19, umbral = 1, local_path = "~/Daniela/Environ/G18G19-dif", tecnique = "Promedio", Grupos = "G18G19", listado = "")
+#cox_G18G19 <- list(CoxLasso_GeneFreq_G18G19_GenesDiferenciales, CoxLasso_GeneFreq_G18G19_HER2_,
+#                   CoxLasso_GeneFreq_G18G19_Luminal_A_, CoxLasso_GeneFreq_G18G19_Luminal_B_,
+#                   CoxLasso_GeneFreq_G18G19_Triple_Negativo_)
+#out2 <- findIntersect(cox = cox_G18G19, umbral = 1, local_path = "~/Daniela/Environ/G18G19-dif", tecnique = "Promedio", Grupos = "G18G19", listado = "")
 
 findIntersect <- function(cox, local_path, umbral, tecnique = "", Grupos = "", listado = "") {
 
