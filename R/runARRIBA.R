@@ -43,6 +43,7 @@ runARRIBA <- function(patient_dir, genomeversion = "hg38", assemblyVersion = "GR
 
   system2(command = ARRIBA,
           args = c(paste0("-x ", bam_file),
+                   #"-I",
                    paste0("-o ", fusion.file),
                    paste0("-O ", fusion.discarded.file),
                    paste0("-a ", FastaHG38),
