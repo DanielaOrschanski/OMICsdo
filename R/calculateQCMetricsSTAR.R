@@ -7,6 +7,7 @@
 calculateQCMetricsSTAR <- function(patients_dir, trimmed = FALSE) {
 
   dir_list <- list.dirs(path = patients_dir, full.names = TRUE, recursive = FALSE)
+  dir_list <- dir_list[-1]
   cant_patients <- length(dir_list)
 
   metricasSTAR <- data.frame("Categoria" = c(), "Valor" = c())
@@ -44,7 +45,12 @@ calculateQCMetricsSTAR <- function(patients_dir, trimmed = FALSE) {
 
     colnames(metricasSTAR)[p+1] <- id
   }
+  metricasST <- as.data.frame(t(metricasSTAR[5:9, ]))
+  colnames(metricasST) <- metricasST[1,]
+  metricasST <- metricasST[-1,]
+  metricasST <- cbind(Sample = rownames(metricasST), metricasST)
 
+  write.xlsx(metricasST, file = sprintf("%s/MetricasQCSTAR.xlsx", patients_dir))
   return(metricasSTAR)
 
 }
