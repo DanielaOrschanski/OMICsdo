@@ -50,8 +50,8 @@ calculateQCMetricsSeq <- function(patients_dir, trimmed = FALSE){
     i= i+1
   }
   #saveRDS(scores_qc, file= sprintf("%s/scores_QC.rds", patients_dir))
-
-  write.xlsx(scores_qc, file= paste(patients_dir, "/MetricasQC.xlsx", sep =""), rowNames= TRUE)
+  trimeado <- ifelse(trimmed == TRUE, "trimmed", "")
+  write.xlsx(scores_qc, file= paste(patients_dir, "/MetricasQC_", trimeado,".xlsx", sep =""), rowNames= TRUE)
 
   return(scores_qc)
 
