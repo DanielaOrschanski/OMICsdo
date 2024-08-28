@@ -10,7 +10,8 @@ analyze_cnv(
   ref,
   extra_bed = NULL,
   minoverlap = 0.5,
-  transit = 1
+  transit = 1,
+  Nspan = 0.8
 )
 }
 \arguments{

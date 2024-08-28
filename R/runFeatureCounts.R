@@ -5,7 +5,7 @@
 #' @import Rsubread
 #' @import openxlsx
 #' @export
-runFeatureCounts <- function(patients_dir) {
+runFeatureCounts <- function(patients_dir, genomeRef) {
 
   list_patients <- list.dirs(path = patients_dir, full.names = FALSE, recursive = FALSE)
   cant_patients <- length(list_patients)
@@ -24,8 +24,9 @@ runFeatureCounts <- function(patients_dir) {
     }
   }
 
+  genome <- ifelse(genomeRef == "HG38", "hg38", "hg19")
   FC.object <- Rsubread::featureCounts(files = list_bams,
-                                       annot.inbuilt = "hg38",
+                                       annot.inbuilt = genome,
                                        juncCounts = TRUE,
                                        isPairedEnd = TRUE)
   saveRDS(FC.object, file = sprintf("%s/FeatureCount_Report.rds", patients_dir))

@@ -4,12 +4,10 @@
 \alias{runTrimgalore}
 \title{RunTrimgalore}
 \usage{
-runTrimgalore(patient_dir, fastQC_after_trim = TRUE, trim_quality = 20)
+runTrimgalore(patient_dir, trim_quality = 20)
 }
 \arguments{
 \item{patient_dir}{Path donde se encuentra el archivo R1 de formato fasta o fastq.}
-
-\item{fastQC_after_trim}{if it is set to TRUE it will run tha FastQC for the trimmed files.}
 
 \item{trim_quality}{is the minimum value of the quality of each base within the sequence that will pass the filter.}
 }

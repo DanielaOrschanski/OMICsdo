@@ -12,7 +12,7 @@
 #' @import showtext
 #' @import tidyr
 
-plot_cnv <- function(all.exons, Nspan = 0.5) {
+plot_cnv <- function(all.exons, patient_dir, Nspan = 0.8) {
 
   library(ggplot2)
   library(dplyr)
@@ -153,9 +153,9 @@ plot_cnv <- function(all.exons, Nspan = 0.5) {
   length(which(expanded_df$colorcnvs == "CNV"))
 
   g <- ggplot(expanded_df, aes(x = globalpos, y = (reads.ratio), color = color)) +
-    geom_point() +
-    geom_segment(data = medias_p, aes(x = start, y = (media_p), xend = end, yend = (media_p)), col="orange", size=2) +
-    geom_segment(data = medias_q, aes(x = start, y = (media_q), xend = end, yend = (media_q)), col="orange", size=2) +
+    geom_point(size= 0.5) +
+    geom_segment(data = medias_p, aes(x = start, y = (media_p), xend = end, yend = (media_p)), col="orange", size=1) +
+    geom_segment(data = medias_q, aes(x = start, y = (media_q), xend = end, yend = (media_q)), col="orange", size=1) +
     scale_color_manual(values = c("purple", "lightblue", "black")) +
     theme_minimal() +
     labs(x = "Posición dentro del cromosoma (mitad)", y = "Reads Ratio", title = "Distribución de reads.ratio por cromosoma") +
@@ -166,19 +166,21 @@ plot_cnv <- function(all.exons, Nspan = 0.5) {
     scale_x_continuous(breaks = c$global_left, labels = c$chr) +
     geom_vline(data = c, aes(xintercept = global_left), linetype = "dotted", color = "black") +
     scale_y_continuous(breaks = seq(-5, 5, by = 0.5)) +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 12))
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 8))
   print(g)
 
   g2 <- g
   for (i in 1:22) {
-    g2 <- g2 + geom_line(aes(x = globalpos, y = fitted), data = list_loes_q[[i]], colour = "red")
+    g2 <- g2 + geom_line(aes(x = globalpos, y = fitted), data = list_loes_q[[i]], colour = "red", size = 0.3)
 
     if (nrow(list_loes_p[[i]]) != 0) {
-      g2 <- g2 + geom_line(aes(x = globalpos, y = fitted), data = list_loes_p[[i]], colour = "red")
+      g2 <- g2 + geom_line(aes(x = globalpos, y = fitted), data = list_loes_p[[i]], colour = "red", size = 0.3)
     }
   }
 
   print(g2)
+  ggsave(filename = sprintf("%s/CNV_graph.png", patient_dir), plot = g2, width = 7, height = 4, dpi = 250)
+
   return(g2)
 
 }

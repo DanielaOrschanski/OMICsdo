@@ -4,7 +4,7 @@
 \alias{runFeatureCounts}
 \title{Run Feature Counts}
 \usage{
-runFeatureCounts(patients_dir)
+runFeatureCounts(patients_dir, genomeRef)
 }
 \arguments{
 \item{patients_dir}{directory that contains}

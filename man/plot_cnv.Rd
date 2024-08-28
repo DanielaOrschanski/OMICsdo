@@ -4,7 +4,7 @@
 \alias{plot_cnv}
 \title{Generation of the plot for CNVs.}
 \usage{
-plot_cnv(all.exons, Nspan = 0.5)
+plot_cnv(all.exons, patient_dir, Nspan = 0.8)
 }
 \arguments{
 \item{CNV_calls}{dataframe that contains the information about the CNVs detected.}
