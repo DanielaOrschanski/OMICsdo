@@ -110,7 +110,7 @@ RNAseqP <- function(patients_dir,
   if(RunFeatureCounts == TRUE) {
     #patients_dir <- "~/EnvironChile/Muestras"
     FC_time <- system.time({
-      FC.object <- runFeatureCounts(patients_dir)
+      FC.object <- runFeatureCounts(patients_dir, genomeRef = genomeRef)
     })
     times_registered <- c(times_registered, FC_time)
     softwares_runned <- c(softwares_runned, "Feature_Counts")

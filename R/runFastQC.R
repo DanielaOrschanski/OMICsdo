@@ -4,6 +4,7 @@
 #' @import stringr
 #' @import viridis
 #' @import reshape2
+#' @import readr
 #' @export
 runFastQC <- function(patient_dir) {
 
@@ -83,12 +84,12 @@ plotFastQC_PBSQ <- function(patients_dir, trimmed = FALSE, R= "R1R2") {
     if (trimmed == FALSE) {
       file_list <- list.files(sprintf("%s/%s", patients_dir, dir_list[p]))
 
-      file_fastqc_zip <- paste0(patients_dir, "/", dir_list[p],"/", file_list[endsWith(file_list, "R1_fastqc.zip")], sep="")
-      unzip(file_fastqc_zip, exdir = sprintf("%s/%s", patients_dir, dir_list[p]))
-      file_fastqc_zip <- paste0(patients_dir, "/", dir_list[p],"/", file_list[endsWith(file_list, "R2_fastqc.zip")], sep="")
-      unzip(file_fastqc_zip, exdir = sprintf("%s/%s", patients_dir, dir_list[p]))
+      #file_fastqc_zip <- paste0(patients_dir, "/", dir_list[p],"/", file_list[endsWith(file_list, "R1_fastqc.zip")], sep="")
+      #unzip(file_fastqc_zip, exdir = sprintf("%s/%s", patients_dir, dir_list[p]))
+      #file_fastqc_zip <- paste0(patients_dir, "/", dir_list[p],"/", file_list[endsWith(file_list, "R2_fastqc.zip")], sep="")
+      #unzip(file_fastqc_zip, exdir = sprintf("%s/%s", patients_dir, dir_list[p]))
 
-      file_list <- list.files(sprintf("%s/%s", patients_dir, dir_list[p]))
+      #file_list <- list.files(sprintf("%s/%s", patients_dir, dir_list[p]))
 
       if (!(length(nchar(file_list[endsWith(file_list, "R1_fastqc")])) == 0 )) {
         dir_fastqc_R1 <- paste0(patients_dir, "/", dir_list[p],"/", file_list[endsWith(file_list, "R1_fastqc")], sep="")
@@ -109,12 +110,12 @@ plotFastQC_PBSQ <- function(patients_dir, trimmed = FALSE, R= "R1R2") {
     } else {
       file_list <- list.files(sprintf("%s/%s/trimmed", patients_dir, dir_list[p]))
 
-      file_fastqc_zip <- paste0(patients_dir, "/", dir_list[p],"/trimmed/", file_list[endsWith(file_list, "val_1_fastqc.zip")], sep="")
-      unzip(file_fastqc_zip, exdir = sprintf("%s/%s/trimmed", patients_dir, dir_list[p]))
-      file_fastqc_zip <- paste0(patients_dir, "/", dir_list[p],"/trimmed/", file_list[endsWith(file_list, "val_2_fastqc.zip")], sep="")
-      unzip(file_fastqc_zip, exdir = sprintf("%s/%s/trimmed", patients_dir, dir_list[p]))
+      #file_fastqc_zip <- paste0(patients_dir, "/", dir_list[p],"/trimmed/", file_list[endsWith(file_list, "val_1_fastqc.zip")], sep="")
+      #unzip(file_fastqc_zip, exdir = sprintf("%s/%s/trimmed", patients_dir, dir_list[p]))
+      #file_fastqc_zip <- paste0(patients_dir, "/", dir_list[p],"/trimmed/", file_list[endsWith(file_list, "val_2_fastqc.zip")], sep="")
+      #unzip(file_fastqc_zip, exdir = sprintf("%s/%s/trimmed", patients_dir, dir_list[p]))
 
-      file_list <- list.files(sprintf("%s/%s/trimmed", patients_dir, dir_list[p]))
+      #file_list <- list.files(sprintf("%s/%s/trimmed", patients_dir, dir_list[p]))
       dir_fastqc_R1 <- paste0(patients_dir, "/", dir_list[p],"/trimmed/", file_list[endsWith(file_list, "val_1_fastqc")], sep="")
       dir_fastqc_R2 <- paste0(patients_dir, "/", dir_list[p],"/trimmed/", file_list[endsWith(file_list, "val_2_fastqc")], sep="")
 

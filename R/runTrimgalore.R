@@ -1,11 +1,10 @@
 #' @title RunTrimgalore
 #' @description Corre la funcion TrimGalore para eliminar los adapters y las lecturas (y bases) de baja calidad.
 #' @param patient_dir Path donde se encuentra el archivo R1 de formato fasta o fastq.
-#' @param fastQC_after_trim if it is set to TRUE it will run tha FastQC for the trimmed files.
 #' @param trim_quality is the minimum value of the quality of each base within the sequence that will pass the filter.
 #' @return path of the trimmed folder which contained the trimmed files and was created inside the patient folder.
 #' @export
-runTrimgalore <- function(patient_dir, fastQC_after_trim = TRUE, trim_quality = 20) {
+runTrimgalore <- function(patient_dir,  trim_quality = 20) {
   # Chequeamos que esta descargado TrimGalore. En caso de no estarlo, lo descarga
   TrimGalore <- downloadTrimGalore()
 
@@ -40,6 +39,7 @@ runTrimgalore <- function(patient_dir, fastQC_after_trim = TRUE, trim_quality = 
   outdir <- sprintf("%s/trimmed", patient_dir)
 
   # Trimeado por consola. Guarda el tiempo que tardo en ejecutarse
+  # PAIRED - END
   t1 <- system.time(system2(command = TrimGalore,
                             args =c("--paired",
                                     gziped,
@@ -48,6 +48,9 @@ runTrimgalore <- function(patient_dir, fastQC_after_trim = TRUE, trim_quality = 
                                     fileR1,
                                     fileR2,
                                     paste0("--basename ", basename(patient_dir)))))
+
+  #stderr = file.path(outdir, "ErrLog.txt")))
+
   #stderr = file.path(outdir, "ErrLog.txt")))
 
   # Calculo el tamaño de los archivos de entrada sin trimmear
@@ -56,9 +59,9 @@ runTrimgalore <- function(patient_dir, fastQC_after_trim = TRUE, trim_quality = 
 
   # Si el formato era .gz, el output se llamara tambien como .gz, porque TrimGalore asi lo genera
   if (gziped == "--gzip") {
-    ofile <- paste0(outdir, "/",basename(patient_dir),"_val_1.fq.gz")
+    ofile <- paste0(outdir, "/", basename(patient_dir),"_val_1.fq.gz")
   } else {
-    ofile <- paste0(outdir, "/",basename(patient_dir),"_val_1.fq")
+    ofile <- paste0(outdir, "/", basename(patient_dir),"_val_1.fq")
   }
 
   # Tamanos del archivo de salida

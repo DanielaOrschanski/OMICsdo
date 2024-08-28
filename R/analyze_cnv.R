@@ -23,7 +23,7 @@
 #' GenesDB <- outAnalisis[[3]]
 #' graph <- outAnalisis[[4]]
 
-analyze_cnv <- function(path_dir, bed, ref, extra_bed = NULL, minoverlap = 0.5, transit = 1) {
+analyze_cnv <- function(path_dir, bed, ref, extra_bed = NULL, minoverlap = 0.5, transit = 1, Nspan = 0.8) {
 
   out_cnv <- detection_cnv(path_dir = path_dir, bed = bed, ref = ref, minoverlap = minoverlap, transit = transit)
   CNV_calls_f <- out_cnv[[1]]
@@ -47,16 +47,17 @@ analyze_cnv <- function(path_dir, bed, ref, extra_bed = NULL, minoverlap = 0.5, 
   #CNV_calls_filt <- CNV_calls_f[CNV_calls_f$size>1000000,]
 
   #wb <- generate_cnv_report(CNV_calls_filt, path_dir = path_dir, transit = transit, minoverlap = minoverlap)
+  cnv_graph <- plot_cnv(all.exons = all.exons, patient_dir = path_dir, Nspan = Nspan)
 
   wb <- generate_cnv_report(CNV_calls_f, path_dir = path_dir, transit = transit, minoverlap = minoverlap, extra_bed= extra_bed)
 
 
   if (file.exists(paste(path_dir, "/OMICsdo", sep=""))) {
     openxlsx::saveWorkbook(wb, paste(path_dir, "/OMICsdo/", id, "_CNVreport.xlsx", sep = ""),  overwrite = TRUE)
-    browseURL(paste(path_dir, "/OMICsdo/", id, "_CNVreport.xlsx", sep = ""))
+    #browseURL(paste(path_dir, "/OMICsdo/", id, "_CNVreport.xlsx", sep = ""))
   } else {
     openxlsx::saveWorkbook(wb, paste(path_dir, "/", id, "_CNVreport.xlsx", sep = ""),  overwrite = TRUE)
-    browseURL(paste(path_dir, "/", id, "_CNVreport.xlsx", sep = ""))
+    #browseURL(paste(path_dir, "/", id, "_CNVreport.xlsx", sep = ""))
   }
 
   message("Report has been succesfully generated")
@@ -66,7 +67,7 @@ analyze_cnv <- function(path_dir, bed, ref, extra_bed = NULL, minoverlap = 0.5, 
   PatientsDB <- initial[[2]]
   GenesDB <- initial[[3]]
 
-  return(list(CNV_calls_f, GenesDB, PatientsDB, all.exons))
+  return(list(CNV_calls_f, GenesDB, PatientsDB, all.exons, cnv_graph))
   #return(list(PatientsDB, CNV_calls, GenesDB, graph))
 }
 
