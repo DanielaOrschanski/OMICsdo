@@ -1,5 +1,5 @@
 # OMICsdo
-A set of algorithms for DNA and RNA seq analysis
+A set of algorithms for DNA and RNA seq processing and its application in precision medicine
 
 ## Authors
 
