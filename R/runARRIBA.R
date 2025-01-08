@@ -37,9 +37,11 @@ runARRIBA <- function(patient_dir, genomeversion = "hg38", assemblyVersion = "GR
   }
 
 
-  fusion.file <- sprintf("%s/%s_fusions.tsv", patient_dir, patient_id)
+  #fusion.file <- sprintf("%s/%s_fusions.tsv", patient_dir, patient_id)
   fusion.discarded.file <- sprintf("%s/%s_fusions_discarded.tsv", patient_dir, patient_id)
 
+  fusion.file <- sprintf("/media/4tb2/Daniela/Environ/Fusiones/Fusiones_MuestrasTCL/%s_fusions.tsv", patient_id)
+  fusion.discarded.file <- sprintf("/media/4tb2/Daniela/Environ/Fusiones/Fusiones_MuestrasTCL/%s_fusions_discarded.tsv", patient_id)
 
   system2(command = ARRIBA,
           args = c(paste0("-x ", bam_file),

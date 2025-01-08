@@ -80,7 +80,14 @@ RNAseqP <- function(patients_dir,
     #ARRIBA
     if (RunARRIBA == TRUE) {
       tryCatch({
-        ARRIBA_time <- runARRIBA(patient_dir_trim)
+        if(genomeRef == "HG38") {
+          genomeversion = "hg38"
+          assemblyVersion = "GRCh38"
+        } else {
+          genomeversion = "hg19"
+          assemblyVersion = "GRCh37"
+        }
+        ARRIBA_time <- runARRIBA(patient_dir_trim, genomeversion = genomeversion, assemblyVersion = assemblyVersion )
         #times_registered <- c(times_registered, ARRIBA_time[[3]])
         #softwares_runned <- c(softwares_runned, "ARRIBA")
         message(sprintf("The patient %s has already been processed with ARRIBA", patient))

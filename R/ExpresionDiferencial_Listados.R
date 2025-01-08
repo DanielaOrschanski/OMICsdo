@@ -14,7 +14,7 @@
 #' @examples ControlDB <- AddControl(path_dir ="/home/sam/Patients/123/123.fastq")
 #' @export
 
-ExpresionDiferencial_Listados <- function(b, df_listado = "", Grupos = "", tejido = "", lfc = 1, p = 0.05, categoria, plotMDS = FALSE, plot_heatmaps = TRUE, porListadoGenes = TRUE) {
+ExpresionDiferencial_Listados <- function(b, df_listado, Grupos, tejido, lfc = 1, p = 0.05, categoria = "MTT", plotMDS = FALSE, plot_heatmaps = TRUE, porListadoGenes = TRUE) {
 
   print(table(b$samples[[categoria]]))
   if(Grupos == "") {
@@ -51,8 +51,8 @@ ExpresionDiferencial_Listados <- function(b, df_listado = "", Grupos = "", tejid
             col = col.group,
             dim.plot = c(1,2))
 
-    #title(main=sprintf("Sample groups:  %s y %s", unique(b_G$samples[[categoria]])[1], unique(b_G$samples[[categoria]])[2] ))
-    legend("topleft",
+    title(main=sprintf("Sample groups:  %s y %s", unique(b_G$samples[[categoria]])[1], unique(b_G$samples[[categoria]])[2] ))
+    legend("topright",
            legend = unique(b_G$samples[[categoria]]),
            fill = unique(col.group),
            pch = 1,
@@ -101,29 +101,7 @@ ExpresionDiferencial_Listados <- function(b, df_listado = "", Grupos = "", tejid
   Informe_Mama$stdev <- efit$stdev.unscaled[,2]
   rownames(Informe_Mama) <- b_G$genes[rownames(Informe_Mama), 2]
 
-  Informe_Mama <- cbind(Genes =  b_G$genes[rownames(Informe_Mama), 2], Informe_Mama)
-  Informe_Mama <- Informe_Mama[-is.na(Informe_Mama$Genes)]
-
-  #VOLCANO PLOT ----------------------------------------------------------
-  library(tidyverse) # includes ggplot2, for data visualisation. dplyr, for data manipulation.
-  library(RColorBrewer) # for a colourful plot
-  library(ggrepel) # for nice annotations
-  # Add a column to the data frame to specify if they are UP- or DOWN- regulated (log2fc respectively positive or negative)<br /><br /><br />
-  Informe_Mama$diffexpressed <- "NO"
-  # if log2Foldchange > 0.6 and pvalue < 0.05, set as "UP"
-  Informe_Mama$diffexpressed[Informe_Mama$log2FC > 1 & Informe_Mama$p_value < 0.05] <- "UP"
-  # if log2Foldchange < -0.6 and pvalue < 0.05, set as "DOWN"
-  Informe_Mama$diffexpressed[Informe_Mama$log2FC < -1 & Informe_Mama$p_value < 0.05] <- "DOWN"
-
-  volcano <- ggplot(data = Informe_Mama, aes(x = log2FC, y = -log10(p_value), col = diffexpressed)) +
-    geom_point()+
-    geom_vline(xintercept = c(-1, 1), col = "blue", linetype = 'dashed') +
-    geom_hline(yintercept = -log10(0.05), col = "red", linetype = 'dashed') +
-    scale_color_manual(values = c("#00AFBB", "grey", "#bb0c00"),
-                       labels = c("Down-regulated", "Not significant", "Up-regulated"))+
-    ggtitle(paste('Pareo: ', Grupos))
-
-  # ------------------------------------------------------------------------
+  #Para cada columna del resto - ordenadas primero las de grupo A y dsp las del B:
 
   E_mama <- as.data.frame(v$E)
   E_mama$p_valor <- efit$p.value
