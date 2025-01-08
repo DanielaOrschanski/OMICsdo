@@ -1,3 +1,4 @@
+
 cox_porsubtipo <- function(mx, Grupos, listado = "", porSubtipo = TRUE) {
 
   if(porSubtipo == TRUE) {

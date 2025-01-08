@@ -140,8 +140,8 @@ fasta_to_bam <- function(path_dir, ref = "HG19") {
   system2("java", sprintf("-jar %s SortSam -I %s/OMICsdo/%s_R1R2.bam -O %s/OMICsdo/%s_sortedR1R2.bam --VALIDATION_STRINGENCY SILENT --SORT_ORDER coordinate", PICARD, path_dir, id, path_dir, id), stdout = TRUE, wait = TRUE)
 
   #Remove big files
-  #file.remove(sprintf("%s/OMICsdo/%s_R1R2.sam", path_dir, id))
-  #file.remove(sprintf("%s/OMICsdo/%s_R1R2.bam", path_dir, id))
+  file.remove(sprintf("%s/OMICsdo/%s_R1R2.sam", path_dir, id))
+  file.remove(sprintf("%s/OMICsdo/%s_R1R2.bam", path_dir, id))
 
   return(sprintf("%s/OMICsdo/%s_sortedR1R2.bam", path_dir, id))
 }

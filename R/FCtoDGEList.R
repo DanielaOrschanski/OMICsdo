@@ -45,3 +45,5 @@ FCtoDGEList <- function(path_fc, path_metadata) {
   return(DGE)
 }
 
+counts <- b$counts
+
