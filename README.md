@@ -1,5 +1,16 @@
 # OMICsdo
-A set of algorithms for DNA and RNA seq processing and its application in precision medicine
+A set of algorithms for DNA and RNA seq processing and its application in precision medicine.
+
+# Installation
+## Dependencies:
+install_github(repo = "https://github.com/vplagnol/ExomeDepth.git")
+library(ExomeDepth)
+
+BiocManager::install("GEOquery")
+install_github("wjawaid/enrichR")
+
+install_github(repo = "https://github.com/DanielaOrschanski/OMICsdo.git")
+
 
 ## Authors
 
