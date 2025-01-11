@@ -26,7 +26,7 @@
   downloadTrimGalore()
   downloadSTAR()
   downloadArriba()
-  downloadBWA()
+  #downloadBWA()
   downloadGATK()
   downloadPICARD()
 
