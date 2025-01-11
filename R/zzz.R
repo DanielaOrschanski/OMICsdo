@@ -27,7 +27,7 @@
   downloadSTAR()
   downloadArriba()
   #downloadBWA()
-  downloadGATK()
+  #downloadGATK()
   downloadPICARD()
 
 }
