@@ -6,12 +6,12 @@
 \usage{
 ExpresionDiferencial_Listados(
   b,
-  df_listado = "",
-  Grupos = "",
-  tejido = "",
+  df_listado,
+  Grupos,
+  tejido,
   lfc = 1,
   p = 0.05,
-  categoria,
+  categoria = "MTT",
   plotMDS = FALSE,
   plot_heatmaps = TRUE,
   porListadoGenes = TRUE

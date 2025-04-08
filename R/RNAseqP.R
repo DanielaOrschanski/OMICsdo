@@ -14,6 +14,7 @@ RNAseqP <- function(patients_dir,
                     genomeRef = "HG38",
                     fastQC_after_trim = FALSE,
                     plot_FastQC_trim = FALSE,
+                    plotFastQC_PBSQ = FALSE,
                     R = "R1R2",
                     trim_quality = 30,
                     RunARRIBA = FALSE,
@@ -35,75 +36,84 @@ RNAseqP <- function(patients_dir,
   #Functions applied to each patient one by one
   #patient <- file_list[1]
   for (patient in file_list) {
-    patient_dir <- sprintf("%s/%s", patients_dir, patient)
-    #FASTQC
-    FastQC_time <- system.time(runFastQC(patient_dir))
-    softwares_runned <- c(softwares_runned, "FastQC")
-    times_registered <- c(times_registered, FastQC_time[[3]])
-    message(sprintf("The patient %s has already been processed with FastQC", patient))
+    print(patient)
 
-    #TRIMGALORE
-    #patient_dir <- "~/EnvironChile/Muestras/Co1099"
+    R1 <- sprintf("%s/%s/%s_R1.fastq.gz", path_dir, patient, patient)
+    R2 <- sprintf("%s/%s/%s_R2.fastq.gz", path_dir, patient, patient)
+    fusion_report <- sprintf("%s/%s/trimmed/%s_FusionReport.xlsx", path_dir, patient, patient)
+
+    if(file.exists(R1) & file.exists(R2) & !file.exists(fusion_report)) {
+      patient_dir <- sprintf("%s/%s", patients_dir, patient)
+      #FASTQC
+      FastQC_time <- system.time(runFastQC(patient_dir))
+      softwares_runned <- c(softwares_runned, "FastQC")
+      times_registered <- c(times_registered, FastQC_time[[3]])
+      message(sprintf("The patient %s has already been processed with FastQC", patient))
+
+      #TRIMGALORE
+      #patient_dir <- "~/EnvironChile/Muestras/Co1099"
       #Returns trimmed folder inside patient's folder
-    TrimGalore_time <- system.time({
-      patient_dir_trim <<- runTrimgalore(patient_dir, trim_quality = trim_quality)
-    })
-    times_registered <- c(times_registered, TrimGalore_time[[3]])
-    softwares_runned <- c(softwares_runned, "TrimGalore")
-
-    message(sprintf("The patient %s has already been processed with TrimGalore", patient))
-
-    #FASTQC
-    if (fastQC_after_trim == TRUE) {
-      FastQC_trim_time <- system.time(runFastQC(patient_dir_trim))
-      times_registered <- c(times_registered, FastQC_trim_time[[3]])
-      softwares_runned <- c(softwares_runned, "FastQC after trim")
-    }
-    #patient_dir_trim <- "~/EnvironChile/Muestras/Co1109/trimmed"
-
-
-    #MIXCR
-    if(RunMIXCR == TRUE) {
-      MIXCR_time <- system.time(runMIXCR(patient_dir_trim))
-      times_registered <- c(times_registered, MIXCR_time[[3]])
-      softwares_runned <- c(softwares_runned, "MIXCR")
-      message(sprintf("The patient %s has already been processed with MIXCR", patient))
-    }
-
-
-    #STAR
-    STAR_time <- system.time(runSTAR(patient_dir_trim))
-    times_registered <- c(times_registered, STAR_time[[3]])
-    softwares_runned <- c(softwares_runned, "STAR")
-    message(sprintf("The patient %s has already been processed with STAR", patient))
-
-    #ARRIBA
-    if (RunARRIBA == TRUE) {
-      tryCatch({
-        if(genomeRef == "HG38") {
-          genomeversion = "hg38"
-          assemblyVersion = "GRCh38"
-        } else {
-          genomeversion = "hg19"
-          assemblyVersion = "GRCh37"
-        }
-        ARRIBA_time <- runARRIBA(patient_dir_trim, genomeversion = genomeversion, assemblyVersion = assemblyVersion )
-        #times_registered <- c(times_registered, ARRIBA_time[[3]])
-        #softwares_runned <- c(softwares_runned, "ARRIBA")
-        message(sprintf("The patient %s has already been processed with ARRIBA", patient))
-      }, error = function(e) {
-        message(sprintf("An error occurred while processing patient %s with ARRIBA: %s", patient, e$message))
+      TrimGalore_time <- system.time({
+        patient_dir_trim <<- runTrimgalore(patient_dir, trim_quality = trim_quality)
       })
+      times_registered <- c(times_registered, TrimGalore_time[[3]])
+      softwares_runned <- c(softwares_runned, "TrimGalore")
+
+      message(sprintf("The patient %s has already been processed with TrimGalore", patient))
+
+      #FASTQC
+      if (fastQC_after_trim == TRUE) {
+        FastQC_trim_time <- system.time(runFastQC(patient_dir_trim))
+        times_registered <- c(times_registered, FastQC_trim_time[[3]])
+        softwares_runned <- c(softwares_runned, "FastQC after trim")
+      }
+      #patient_dir_trim <- "~/EnvironChile/Muestras/Co1109/trimmed"
+
+
+      #MIXCR
+      if(RunMIXCR == TRUE) {
+        MIXCR_time <- system.time(runMIXCR(patient_dir_trim))
+        times_registered <- c(times_registered, MIXCR_time[[3]])
+        softwares_runned <- c(softwares_runned, "MIXCR")
+        message(sprintf("The patient %s has already been processed with MIXCR", patient))
+      }
+
+
+      #STAR
+      STAR_time <- system.time(runSTAR(patient_dir_trim))
+      times_registered <- c(times_registered, STAR_time[[3]])
+      softwares_runned <- c(softwares_runned, "STAR")
+      message(sprintf("The patient %s has already been processed with STAR", patient))
+
+      #ARRIBA
+      if (RunARRIBA == TRUE) {
+        tryCatch({
+          if(genomeRef == "HG38") {
+            genomeversion = "hg38"
+            assemblyVersion = "GRCh38"
+          } else {
+            genomeversion = "hg19"
+            assemblyVersion = "GRCh37"
+          }
+          ARRIBA_time <- runARRIBA(patient_dir_trim, genomeversion = genomeversion, assemblyVersion = assemblyVersion )
+          #times_registered <- c(times_registered, ARRIBA_time[[3]])
+          #softwares_runned <- c(softwares_runned, "ARRIBA")
+          message(sprintf("The patient %s has already been processed with ARRIBA", patient))
+        }, error = function(e) {
+          message(sprintf("An error occurred while processing patient %s with ARRIBA: %s", patient, e$message))
+        })
+      }
     }
 
   }
 
   #Functions applied to all the patients together:
-  PLOT_time <- system.time(plotFastQC_PBSQ(patients_dir, trimmed = FALSE, R= R))
-  times_registered <- c(times_registered, PLOT_time[[3]])
-  softwares_runned <- c(softwares_runned, "plot_PBSQ")
-  message("The PBSQ plot has been generated!")
-
+  if(plotFastQC_PBSQ == TRUE) {
+    PLOT_time <- system.time(plotFastQC_PBSQ(patients_dir, trimmed = FALSE, R= R))
+    times_registered <- c(times_registered, PLOT_time[[3]])
+    softwares_runned <- c(softwares_runned, "plot_PBSQ")
+    message("The PBSQ plot has been generated!")
+  }
 
   #Aca hay algo que da error:
   if(plot_FastQC_trim == TRUE) {
@@ -129,3 +139,7 @@ RNAseqP <- function(patients_dir,
   return(c(softwares_runned, times_registered))
 
 }
+
+
+
+

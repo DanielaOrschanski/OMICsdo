@@ -4,7 +4,13 @@
 \alias{fusionStats}
 \title{Obtain statistics from fusions.}
 \usage{
-fusionStats(patients_dir, Metadata, group)
+fusionStats(
+  patients_dir,
+  Metadata = NA,
+  group = NA,
+  cohorte = "",
+  sobrevida = TRUE
+)
 }
 \arguments{
 \item{patients_dir}{path to the folder that contains one folder for each sample.}

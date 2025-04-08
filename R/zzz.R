@@ -26,8 +26,8 @@
   downloadTrimGalore()
   downloadSTAR()
   downloadArriba()
-  downloadBWA()
-  downloadGATK()
+  #downloadBWA()
+  #downloadGATK()
   downloadPICARD()
 
 }
@@ -119,10 +119,10 @@ check_packages <- function() {
   }
   library(ComplexHeatmap)
 
-  if (!requireNamespace("MIXTURE", quietly = TRUE)) {
-    install_github("elmerfer/MIXTURE")
-  }
-  library(MIXTURE)
+  #if (!requireNamespace("MIXTURE", quietly = TRUE)) {
+  #  install_github("elmerfer/MIXTURE")
+  #}
+  #library(MIXTURE)
 
   if (!requireNamespace("Rsubread", quietly = TRUE)) {
     BiocManager::install("Rsubread")

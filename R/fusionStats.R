@@ -9,7 +9,7 @@
 #' @import readxl
 #' @examples fusionStats(patients_dir, Metadata, group = "group")
 
-fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "") {
+fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", sobrevida = TRUE) {
 
   ids <-  list.dirs(path = patients_dir, full.names = TRUE, recursive = FALSE)
   length(ids)
@@ -87,7 +87,10 @@ fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "") {
   }
 
 
-  Stats_Fusions[is.na(Stats_Fusions)] <- 0
+  if(any(is.na(Stats_Fusions))) {
+    Stats_Fusions[is.na(Stats_Fusions)] <- 0
+  }
+
   openxlsx::write.xlsx(as.data.frame(Todos_FusionReport), file = sprintf("%s/Todos-FusionReports_%s.xlsx", patients_dir, cohorte))
   write.xlsx(Stats_Fusions, file = sprintf("%s/StatsFusions_%s.xlsx", patients_dir, cohorte))
 
@@ -128,13 +131,10 @@ fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "") {
     summarise(
       Total_Apariciones = n(),  # Cantidad total de veces que aparece el gen
       Muestras_Distintas = n_distinct(ID),  # Muestras únicas donde aparece
-      Apariciones_MET_Pos = sum(MTT == "MET+"),  # Veces que aparece en muestras MET+,
-      Apariciones_MET_Neg = sum(MTT == "MET-")
-      #,  # Veces que aparece en muestras MET+
-      #Apariciones_NormalTissue = sum(Grupo == "normal breast tissue"),
-      #Apariciones_TumorTissue = sum(Grupo == "breast tumor")
+      Apariciones_MET_Pos = n_distinct(ID[MTT == "MET+"]),  # Muestras únicas donde el gen aparece en MET+
+      Apariciones_MET_Neg = n_distinct(ID[MTT == "MET-"])   # Muestras únicas donde el gen aparece en MET-
     ) %>%
-    arrange(desc(Total_Apariciones))  # Ordenar por frecuencia
+    arrange(desc(Total_Apariciones))
 
   write.xlsx(gen_counts, file = sprintf("%s/GeneFusions_%s.xlsx", patients_dir, cohorte))
 
@@ -142,8 +142,9 @@ fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "") {
   boxplots_TFB_MTT(stats = Stats_Fusions, group = group, cohorte = cohorte)
 
   #Generar analisis sobrevida:
-  analisis_sobrevida(stats = Stats_Fusions, metadata = Metadata)
-
+  if(sobrevida == TRUE) {
+    analisis_sobrevida(stats = Stats_Fusions, metadata = Metadata)
+  }
 
   return(list(Todos_FusionReport, Stats_Fusions, gen_counts))
 

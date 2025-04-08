@@ -9,6 +9,7 @@ RNAseqP(
   genomeRef = "HG38",
   fastQC_after_trim = FALSE,
   plot_FastQC_trim = FALSE,
+  plotFastQC_PBSQ = FALSE,
   R = "R1R2",
   trim_quality = 30,
   RunARRIBA = FALSE,
