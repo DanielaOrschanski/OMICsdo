@@ -30,7 +30,11 @@ fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", s
     FusionReport <- read_excel(fusions_file)
 
     if(!is.na(Metadata)) {
-      Grupo <- as.character(Metadata[which(Metadata$ID == i), group])
+      if(!is.na(group)) {
+        Grupo <- as.character(Metadata[which(Metadata$ID == i), group])
+      } else {
+        Grupo <- "-"
+      }
       FusionReport$MTT <- as.character(Metadata[which(Metadata$ID == i), "MTT"])
       FusionReport$Grupo <- Grupo
 
@@ -77,7 +81,9 @@ fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", s
 
     if(!is.na(Metadata)) {
       met <- as.character(Metadata[which(Metadata$ID == i), "MTT"])
-      Grupo <- as.character(Metadata[which(Metadata$ID == i), group])
+      if(!is.na(group)) {
+        Grupo <- as.character(Metadata[which(Metadata$ID == i), group])
+      }
       Stats_Fusions[k, "Grupo"] <- Grupo
       Stats_Fusions[k, "MTT"] <- met
     }
@@ -89,6 +95,10 @@ fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", s
 
   if(any(is.na(Stats_Fusions))) {
     Stats_Fusions[is.na(Stats_Fusions)] <- 0
+  }
+
+  if(any(is.na(Stats_Fusions$Fusiones_conf_H))) {
+    Stats_Fusions$Fusiones_conf_H[is.na(Stats_Fusions$Fusiones_conf_H)] <- 0
   }
 
   openxlsx::write.xlsx(as.data.frame(Todos_FusionReport), file = sprintf("%s/Todos-FusionReports_%s.xlsx", patients_dir, cohorte))
@@ -156,6 +166,7 @@ boxplots_TFB_MTT <- function(stats, group, cohorte) {
   max <- max(stats$Fusiones_conf_H)
   paso <- round(max/10)
 
+  while (!is.null(dev.list())) dev.off()
   box_TFB_MTT <- ggplot(stats, aes(x = MTT, y = Fusiones_conf_H, fill = MTT)) +
     geom_violin(alpha = 0.5) +
     geom_boxplot() +

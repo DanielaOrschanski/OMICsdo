@@ -34,13 +34,13 @@ RNAseqP <- function(patients_dir,
   file_list <- list.dirs(path = patients_dir, full.names = FALSE, recursive = FALSE)
 
   #Functions applied to each patient one by one
-  #patient <- file_list[1]
+  #patient <- file_list[29]
   for (patient in file_list) {
     print(patient)
 
-    R1 <- sprintf("%s/%s/%s_R1.fastq.gz", path_dir, patient, patient)
-    R2 <- sprintf("%s/%s/%s_R2.fastq.gz", path_dir, patient, patient)
-    fusion_report <- sprintf("%s/%s/trimmed/%s_FusionReport.xlsx", path_dir, patient, patient)
+    R1 <- sprintf("%s/%s/%s_R1.fastq.gz", patients_dir, patient, patient)
+    R2 <- sprintf("%s/%s/%s_R2.fastq.gz", patients_dir, patient, patient)
+    fusion_report <- sprintf("%s/%s/trimmed/%s_FusionReport.xlsx", patients_dir, patient, patient)
 
     if(file.exists(R1) & file.exists(R2) & !file.exists(fusion_report)) {
       patient_dir <- sprintf("%s/%s", patients_dir, patient)

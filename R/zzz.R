@@ -27,8 +27,9 @@
   downloadSTAR()
   downloadArriba()
   #downloadBWA()
-  #downloadGATK()
+  downloadGATK()
   downloadPICARD()
+  downloadHG38()
 
 }
 
@@ -568,119 +569,76 @@ downloadBWA <- function() {
 #' @title downloadGATK
 #' @description Downloads and decompresses the GATK software
 #' @return The path where the .exe file is located
+
 downloadGATK <- function() {
   omicsdo_sof <- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
   #omicsdo_sof <- sprintf("%s/OMICsdoSof", Sys.getenv('R_LIBS_USER'))
-  tryCatch(
-    expr = {
-      system(sprintf('java -jar %s/GATK/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar', omicsdo_sof))
-    },
-    error = function(e) {
-      message("Installation of GATK will now begin. Check if all the required packages are downloaded.")
-      print(e)
-      dir.create(sprintf("%s/GATK", omicsdo_sof))
-      URL <- 'https://github.com/broadinstitute/gatk/releases/download/4.3.0.0/gatk-4.3.0.0.zip'
-      system2("wget", args = c(URL, "-P", paste(omicsdo_sof, "/GATK", sep="")), wait = TRUE, stdout = NULL, stderr = NULL)
-      file <- basename(URL)
-      file_dir <- paste(omicsdo_sof, "/GATK/", file , sep = "")
-      filedc <- substr(file, start = 0, stop = (nchar(file) - 4))
-      unzip(zipfile = file_dir, exdir = paste(omicsdo_sof, "/GATK", sep=""))
 
-      #Escribo el path en el txt
-      softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
-      GATK <- sprintf('%s/GATK/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar', omicsdo_sof)
-      softwares_actualizado <- c(softwares, sprintf("GATK %s", GATK))
-      write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+  if(file.exists(sprintf('%s/GATK/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar', omicsdo_sof))) {
+    system(sprintf('java -jar %s/GATK/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar', omicsdo_sof))
+  } else {
+    message("Installation of GATK will now begin. Check if all the required packages are downloaded.")
+    dir.create(sprintf("%s/GATK", omicsdo_sof))
+    URL <- 'https://github.com/broadinstitute/gatk/releases/download/4.3.0.0/gatk-4.3.0.0.zip'
+    system2("wget", args = c(URL, "-P", paste(omicsdo_sof, "/GATK", sep="")), wait = TRUE, stdout = NULL, stderr = NULL)
+    file <- basename(URL)
+    file_dir <- paste(omicsdo_sof, "/GATK/", file , sep = "")
+    filedc <- substr(file, start = 0, stop = (nchar(file) - 4))
+    unzip(zipfile = file_dir, exdir = paste(omicsdo_sof, "/GATK", sep=""))
 
-    },
-    warning = function(w) {
-      message("Installation of GATK will now begin. Check if all the required packages are downloaded.")
-      dir.create(sprintf("%s/GATK", omicsdo_sof))
-      URL <- 'https://github.com/broadinstitute/gatk/releases/download/4.3.0.0/gatk-4.3.0.0.zip'
-      system2("wget", args = c(URL, "-P", paste(omicsdo_sof, "/GATK", sep="")), wait = TRUE, stdout = NULL, stderr = NULL)
-      file <- basename(URL)
-      file_dir <- paste(omicsdo_sof, "/GATK/", file , sep = "")
-      filedc <- substr(file, start = 0, stop = (nchar(file) - 4))
-      unzip(zipfile = file_dir, exdir = paste(omicsdo_sof, "/GATK", sep=""))
+    #Escribo el path en el txt
+    softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+    GATK <- sprintf('%s/GATK/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar', omicsdo_sof)
+    softwares_actualizado <- c(softwares, sprintf("GATK %s", GATK))
+    write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
 
-      #Escribo el path en el txt
-      softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
-      GATK <- sprintf('%s/GATK/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar', omicsdo_sof)
-      softwares_actualizado <- c(softwares, sprintf("GATK %s", GATK))
-      write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+  }
 
-    },
-    finally = {
-      GATK <<- sprintf('%s/GATK/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar', omicsdo_sof)
-      message("-.Message from GATK")
-    }
-  )
+  GATK <<- sprintf('%s/GATK/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar', omicsdo_sof)
+  message("-.Message from GATK")
 
-  return(sprintf('%s/GATK/%s/gatk-package-4.3.0.0-local.jar', omicsdo_sof, filedc))
+  return(GATK)
 }
+
 
 
 # PICARD
 #' @title downloadPICARD
 #' @description Downloads and decompresses the PICARD software
 #' @return The path where the .exe file is located
+
 downloadPICARD <- function() {
 
   omicsdo_sof <- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
 
-  tryCatch(
-    expr = {
-      system(sprintf('java -jar %s/PICARD/picard-2.27.5/picard.jar', omicsdo_sof))
-    },
-    error = function(e) {
-      message("Installation of PICARD will now begin. Check if all the required packages are downloaded.")
-      print(e)
-      dir.create(sprintf("%s/PICARD", omicsdo_sof))
-      URL <- "https://github.com/broadinstitute/picard/archive/refs/tags/2.27.5.tar.gz"
-      system2("wget", args = c(URL, "-P", paste(omicsdo_sof, "/PICARD", sep="")), wait = TRUE, stdout = NULL, stderr = NULL)
-      system2("gzip" , sprintf("-d %s/PICARD/2.27.5.tar.gz", omicsdo_sof))
-      system2("tar" , sprintf("-xvf %s/PICARD/2.27.5.tar -C %s/PICARD", omicsdo_sof, omicsdo_sof))
-      file.remove(sprintf("%s/PICARD/2.27.5.tar", omicsdo_sof))
+  if (file.exists(sprintf('%s/PICARD/picard-2.27.5/picard.jar', omicsdo_sof))) {
+    sprintf('java -jar %s/PICARD/picard-2.27.5/picard.jar', omicsdo_sof)
 
-      URL2 <- "https://github.com/broadinstitute/picard/releases/download/2.27.5/picard.jar"
-      dir2 <- sprintf("%s/PICARD/picard-2.27.5", omicsdo_sof)
-      system2("wget", args = c(URL2, "-P", dir2), wait = TRUE, stdout = NULL, stderr = NULL)
+  } else {
+    message("Installation of PICARD will now begin. Check if all the required packages are downloaded.")
+    dir.create(sprintf("%s/PICARD", omicsdo_sof))
+    URL <- "https://github.com/broadinstitute/picard/archive/refs/tags/2.27.5.tar.gz"
+    system2("wget", args = c(URL, "-P", paste(omicsdo_sof, "/PICARD", sep="")), wait = TRUE, stdout = NULL, stderr = NULL)
+    system2("gzip" , sprintf("-d %s/PICARD/2.27.5.tar.gz", omicsdo_sof))
+    system2("tar" , sprintf("-xvf %s/PICARD/2.27.5.tar -C %s/PICARD", omicsdo_sof, omicsdo_sof))
+    file.remove(sprintf("%s/PICARD/2.27.5.tar", omicsdo_sof))
 
-      #Escribo el path en el txt
-      softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
-      PICARD <- sprintf('%s/PICARD/picard-2.27.5/picard.jar', omicsdo_sof)
-      softwares_actualizado <- c(softwares, sprintf("PICARD %s", PICARD))
-      write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+    URL2 <- "https://github.com/broadinstitute/picard/releases/download/2.27.5/picard.jar"
+    dir2 <- sprintf("%s/PICARD/picard-2.27.5", omicsdo_sof)
+    system2("wget", args = c(URL2, "-P", dir2), wait = TRUE, stdout = NULL, stderr = NULL)
 
-    },
-    warning = function(w) {
-      message("Installation of PICARD will now begin. Check if all the required packages are downloaded.")
-      dir.create(sprintf("%s/PICARD", omicsdo_sof))
-      URL <- "https://github.com/broadinstitute/picard/archive/refs/tags/2.27.5.tar.gz"
-      system2("wget", args = c(URL, "-P", paste(omicsdo_sof, "/PICARD", sep="")), wait = TRUE, stdout = NULL, stderr = NULL)
-      system2("gzip" , sprintf("-d %s/PICARD/2.27.5.tar.gz", omicsdo_sof))
-      system2("tar" , sprintf("-xvf %s/PICARD/2.27.5.tar -C %s/PICARD", omicsdo_sof, omicsdo_sof))
-      file.remove(sprintf("%s/PICARD/2.27.5.tar", omicsdo_sof))
+    #Escribo el path en el txt
+    softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+    PICARD <- sprintf('%s/PICARD/picard-2.27.5/picard.jar', omicsdo_sof)
+    softwares_actualizado <- c(softwares, sprintf("PICARD %s", PICARD))
+    write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
 
-      URL2 <- "https://github.com/broadinstitute/picard/releases/download/2.27.5/picard.jar"
-      dir2 <- sprintf("%s/PICARD/picard-2.27.5", omicsdo_sof)
-      system2("wget", args = c(URL2, "-P", dir2), wait = TRUE, stdout = NULL, stderr = NULL)
+  }
 
-      #Escribo el path en el txt
-      softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
-      PICARD <- sprintf('%s/PICARD/picard-2.27.5/picard.jar', omicsdo_sof)
-      softwares_actualizado <- c(softwares, sprintf("PICARD %s", PICARD))
-      write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+  PICARD <<- sprintf('%s/PICARD/picard-2.27.5/picard.jar', omicsdo_sof)
+  message("-.Message from PICARD")
 
-    },
-
-    finally = {
-      PICARD <<- sprintf('%s/PICARD/picard-2.27.5/picard.jar', omicsdo_sof)
-      message("-.Message from PICARD")
-    }
-  )
-
-  return(sprintf('%s/PICARD/picard-2.27.5/picard.jar', omicsdo_sof))
+  return(PICARD)
 }
 
 
