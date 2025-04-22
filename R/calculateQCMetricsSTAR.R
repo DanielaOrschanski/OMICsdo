@@ -7,7 +7,6 @@
 calculateQCMetricsSTAR <- function(patients_dir, trimmed = FALSE) {
 
   dir_list <- list.dirs(path = patients_dir, full.names = TRUE, recursive = FALSE)
-  dir_list <- dir_list[-1]
   cant_patients <- length(dir_list)
 
   metricasSTAR <- data.frame("Categoria" = c(), "Valor" = c())
