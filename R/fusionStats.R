@@ -75,7 +75,7 @@ fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", s
     }
 
 
-    if(!is.na(Metadata)) {
+    if(!missing(Metadata)) {
       met <- as.character(Metadata[which(Metadata$ID == i), "MTT"])
       Grupo <- as.character(Metadata[which(Metadata$ID == i), group])
       Stats_Fusions[k, "Grupo"] <- Grupo
