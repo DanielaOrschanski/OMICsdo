@@ -29,7 +29,7 @@ fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", s
     fusions_file <- sprintf("%s/trimmed/%s_FusionReport.xlsx", id, i)
     FusionReport <- read_excel(fusions_file)
 
-    if(!is.na(Metadata)) {
+    if(!missing(Metadata)) {
       Grupo <- as.character(Metadata[which(Metadata$ID == i), group])
       FusionReport$MTT <- as.character(Metadata[which(Metadata$ID == i), "MTT"])
       FusionReport$Grupo <- Grupo
