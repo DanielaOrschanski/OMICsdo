@@ -34,7 +34,7 @@ RNAseqP <- function(patients_dir,
   file_list <- list.dirs(path = patients_dir, full.names = FALSE, recursive = FALSE)
 
   #Functions applied to each patient one by one
-  #patient <- file_list[29]
+  #patient <- file_list[1]
   for (patient in file_list) {
     print(patient)
 
@@ -42,7 +42,7 @@ RNAseqP <- function(patients_dir,
     R2 <- sprintf("%s/%s/%s_R2.fastq.gz", patients_dir, patient, patient)
     fusion_report <- sprintf("%s/%s/trimmed/%s_FusionReport.xlsx", patients_dir, patient, patient)
 
-    if(file.exists(R1) & file.exists(R2) & !file.exists(fusion_report)) {
+    #if(file.exists(R1) & file.exists(R2) & !file.exists(fusion_report)) {
       patient_dir <- sprintf("%s/%s", patients_dir, patient)
       #FASTQC
       FastQC_time <- system.time(runFastQC(patient_dir))
@@ -56,8 +56,8 @@ RNAseqP <- function(patients_dir,
       TrimGalore_time <- system.time({
         patient_dir_trim <<- runTrimgalore(patient_dir, trim_quality = trim_quality)
       })
-      times_registered <- c(times_registered, TrimGalore_time[[3]])
-      softwares_runned <- c(softwares_runned, "TrimGalore")
+      #times_registered <- c(times_registered, TrimGalore_time[[3]])
+      #softwares_runned <- c(softwares_runned, "TrimGalore")
 
       message(sprintf("The patient %s has already been processed with TrimGalore", patient))
 
@@ -105,7 +105,7 @@ RNAseqP <- function(patients_dir,
       }
     }
 
-  }
+  #}
 
   #Functions applied to all the patients together:
   if(plotFastQC_PBSQ == TRUE) {

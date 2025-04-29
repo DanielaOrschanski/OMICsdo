@@ -9,7 +9,9 @@
 #' @import readxl
 #' @examples fusionStats(patients_dir, Metadata, group = "group")
 
-fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", sobrevida = TRUE) {
+#DESACTUALIZADO!!
+
+fusionStatsV <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", sobrevida = TRUE) {
 
   ids <-  list.dirs(path = patients_dir, full.names = TRUE, recursive = FALSE)
   length(ids)
@@ -29,8 +31,12 @@ fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", s
     fusions_file <- sprintf("%s/trimmed/%s_FusionReport.xlsx", id, i)
     FusionReport <- read_excel(fusions_file)
 
-    if(!missing(Metadata)) {
-      Grupo <- as.character(Metadata[which(Metadata$ID == i), group])
+    if(!is.na(Metadata)) {
+      if(!is.na(group)) {
+        Grupo <- as.character(Metadata[which(Metadata$ID == i), group])
+      } else {
+        Grupo <- "-"
+      }
       FusionReport$MTT <- as.character(Metadata[which(Metadata$ID == i), "MTT"])
       FusionReport$Grupo <- Grupo
 
@@ -75,9 +81,11 @@ fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", s
     }
 
 
-    if(!missing(Metadata)) {
+    if(!is.na(Metadata)) {
       met <- as.character(Metadata[which(Metadata$ID == i), "MTT"])
-      Grupo <- as.character(Metadata[which(Metadata$ID == i), group])
+      if(!is.na(group)) {
+        Grupo <- as.character(Metadata[which(Metadata$ID == i), group])
+      }
       Stats_Fusions[k, "Grupo"] <- Grupo
       Stats_Fusions[k, "MTT"] <- met
     }
@@ -91,6 +99,10 @@ fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", s
     Stats_Fusions[is.na(Stats_Fusions)] <- 0
   }
 
+  if(any(is.na(Stats_Fusions$Fusiones_conf_H))) {
+    Stats_Fusions$Fusiones_conf_H[is.na(Stats_Fusions$Fusiones_conf_H)] <- 0
+  }
+
   openxlsx::write.xlsx(as.data.frame(Todos_FusionReport), file = sprintf("%s/Todos-FusionReports_%s.xlsx", patients_dir, cohorte))
   write.xlsx(Stats_Fusions, file = sprintf("%s/StatsFusions_%s.xlsx", patients_dir, cohorte))
 
@@ -101,58 +113,41 @@ fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", s
     pivot_longer(cols = c(gene1, gene2), names_to = "Gene_Type", values_to = "Gene")
 
   str(TFB_long)
-  TFB_long <- as.data.frame(TFB_long)
   colnames(TFB_long)[1] <- "ID"
   TFB_long$ID <- factor(TFB_long$ID)
 
   # Contabilizar métricas por gen
-  if(!is.na(group)) {
+  if(!is.na(group)){
     categorias_grupo <- unique(Stats_Fusions$Grupo)
 
-    if(group == "tissue_type") {
-      gen_counts <- TFB_long %>%
-        group_by(Gene) %>%
-        summarise(
-          Total_Apariciones = n(),  # Cantidad total de veces que aparece el gen
-          Muestras_Distintas = n_distinct(ID),  # Muestras únicas donde aparece
-          MET_Pos = n_distinct(ID[MTT == "MET+"]),
-          MET_Neg = n_distinct(ID[MTT == "MET-"]),
-          Adyacente = n_distinct(ID[Grupo == "Normal appearing thyroid tissue adjacent to PTC tumor"]),
-          Normal = n_distinct(ID[Grupo == "Normal"]),
-          Tumoral = n_distinct(ID[Grupo == "PTC tumor tissue"])
-        ) %>%
-        arrange(desc(Total_Apariciones))
-
-    } else if(group == "Subtipo" | group == "subtipo") {
-      gen_counts <- TFB_long %>%
-        group_by(Gene) %>%
-        summarise(
-          Total_Apariciones = n(),  # Cantidad total de veces que aparece el gen
-          Muestras_Distintas = n_distinct(ID),  # Muestras únicas donde aparece
-          MET_Pos = n_distinct(ID[MTT == "MET+"]),  # Veces que aparece en muestras MET+,
-          MET_Neg = n_distinct(ID[MTT == "MET-"]),
-          LumHER2 = n_distinct(ID[Grupo == "Luminal HER2"]),
-          LumB = n_distinct(ID[Grupo == "Luminal B"]),
-          TripleNeg = n_distinct(ID[Grupo == "Triple Negativo"]),
-          HER2 = n_distinct(ID[Grupo == "HER2"]),
-          LumA = n_distinct(ID[Grupo == "Luminal A"])
-        ) %>%
-        arrange(desc(Total_Apariciones))  # Ordenar por frecuencia
-    }
-
-
-  } else {
     gen_counts <- TFB_long %>%
       group_by(Gene) %>%
       summarise(
         Total_Apariciones = n(),  # Cantidad total de veces que aparece el gen
         Muestras_Distintas = n_distinct(ID),  # Muestras únicas donde aparece
-        Apariciones_MET_Pos = n_distinct(ID[MTT == "MET+"]),  # Muestras únicas donde el gen aparece en MET+
-        Apariciones_MET_Neg = n_distinct(ID[MTT == "MET-"])   # Muestras únicas donde el gen aparece en MET-
+        MET_Pos = sum(MTT == "MET+"),  # Veces que aparece en muestras MET+,
+        MET_Neg = sum(MTT == "MET-"),
+        LumHER2 = sum(Grupo == "Luminal HER2"),
+        LumB = sum(Grupo == "Luminal B"),
+        TripleNeg = sum(Grupo == "Triple Negativo"),
+        HER2 = sum(Grupo == "HER2"),
+        LumA = sum(Grupo == "Luminal A")
+        #Apariciones_TumorTissue = sum(Grupo == "breast tumor")
       ) %>%
-      arrange(desc(Total_Apariciones))
+      arrange(desc(Total_Apariciones))  # Ordenar por frecuencia
 
   }
+
+  gen_counts <- TFB_long %>%
+    group_by(Gene) %>%
+    summarise(
+      Total_Apariciones = n(),  # Cantidad total de veces que aparece el gen
+      Muestras_Distintas = n_distinct(ID),  # Muestras únicas donde aparece
+      Apariciones_MET_Pos = n_distinct(ID[MTT == "MET+"]),  # Muestras únicas donde el gen aparece en MET+
+      Apariciones_MET_Neg = n_distinct(ID[MTT == "MET-"])   # Muestras únicas donde el gen aparece en MET-
+    ) %>%
+    arrange(desc(Total_Apariciones))
+
   write.xlsx(gen_counts, file = sprintf("%s/GeneFusions_%s.xlsx", patients_dir, cohorte))
 
   #Generar boxplot:
@@ -172,20 +167,18 @@ boxplots_TFB_MTT <- function(stats, group, cohorte) {
 
   max <- max(stats$Fusiones_conf_H)
   paso <- round(max/10)
-  stats$MTT <- as.factor(stats$MTT)
 
   while (!is.null(dev.list())) dev.off()
-
   box_TFB_MTT <- ggplot(stats, aes(x = MTT, y = Fusiones_conf_H, fill = MTT)) +
     geom_violin(alpha = 0.5) +
     geom_boxplot() +
     geom_jitter(width = 0.2, size = 1, alpha = 0.7) +
-    labs(title = sprintf("FPR por MTT - %s", cohorte),
+    labs(title = sprintf("TFB por MTT - %s", cohorte),
          x = "MTT",
-         y = "FPR") +
+         y = "Cantidad de Fusiones") +
     theme_minimal() +
     scale_y_continuous(limits = c(0, NA), breaks = seq(0, max +paso, by = paso)) +
-    stat_compare_means(method = "wilcox.test", label = "p.format")
+    stat_compare_means(method = "wilcox.test", label = "p.format")  # Agrega p-valor con Wilcoxon
 
   print(box_TFB_MTT)
 
@@ -194,9 +187,9 @@ boxplots_TFB_MTT <- function(stats, group, cohorte) {
       geom_violin(alpha = 0.5) +
       geom_boxplot() +
       geom_jitter(width = 0.2, size = 1, alpha = 0.7) +
-      labs(title = sprintf("FPR por MTT y Grupo - %s", cohorte),
+      labs(title = sprintf("TFB por MTT y Grupo - %s", cohorte),
            x = "MTT",
-           y = "FPR") +
+           y = "Cantidad de Fusiones") +
       theme_minimal() +
       #scale_y_continuous(limits = c(0, NA)) +
       scale_y_continuous(limits = c(0, NA), breaks = seq(0, max+paso, by = paso)) +
@@ -208,6 +201,7 @@ boxplots_TFB_MTT <- function(stats, group, cohorte) {
 }
 
 #Necesito que metadata tenga info de tiempo y MTT:
+
 analisis_sobrevida <- function(stats, metadata) {
 
   thr <- median(stats$Fusiones_conf_H)

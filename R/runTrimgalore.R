@@ -7,35 +7,31 @@
 runTrimgalore <- function(patient_dir,  trim_quality = 20) {
   # Chequeamos que esta descargado TrimGalore. En caso de no estarlo, lo descarga
   TrimGalore <- downloadTrimGalore()
-
   patient_id <- basename(patient_dir)
   file_list <- list.files(patient_dir)
+
   gzip <- ifelse(length(nchar(file_list[endsWith(file_list, "R1.fastq.gz")])) == 0, "", ".gz")
   fileR1 <- paste0(patient_dir, "/", file_list[endsWith(file_list, sprintf("R1.fastq%s", gzip))], sep="")
   fileR2 <- paste0(patient_dir, "/", file_list[endsWith(file_list, sprintf("R2.fastq%s", gzip))], sep="")
-
-  if ((length(nchar(file_list[endsWith(file_list, "R1.fastq.gz")])) == 0) | (length(nchar(file_list[endsWith(file_list, "R2.fastq.gz")])) == 0)) {
-    stop("There are no fastq files in this directory")
-  }
-
-
   # Se fija si los archivos de entrada son de formato .gz
   gziped <- ifelse(stringr::str_detect(fileR1,".gz"),"--gzip","--dont_gzip")
 
+  if ((length(nchar(file_list[endsWith(file_list, "R1.fastq.gz")])) == 0) | (length(nchar(file_list[endsWith(file_list, "R2.fastq.gz")])) == 0)) {
+    message("There are no fastq files in this directory")
+  }
 
   #Se fija si está hecho el trimmeado antes:
   trim_dir <- list.files(paste0(patient_dir, "/trimmed"))
   if (!(length(nchar(file_list[endsWith(trim_dir, "val_1.fq.gz")])) == 0)) {
-    ifelse(gziped == "--gzip",
-           file_trim <- paste0(patient_dir, "/", file_list[endsWith(file_list, "val_1.fq.gz")], sep=""),
-           file_trim <- paste0(patient_dir, "/", file_list[endsWith(file_list, "val_1.fq")], sep=""))
+    #ifelse(gziped == "--gzip",
+    #       file_trim <- paste0(patient_dir, "/", file_list[endsWith(file_list, "val_1.fq.gz")], sep=""),
+    #       file_trim <- paste0(patient_dir, "/", file_list[endsWith(file_list, "val_1.fq")], sep=""))
 
     message("You have already trimmed this sample")
     return(sprintf("%s/trimmed", patient_dir))
   }
 
   dir.create(sprintf("%s/trimmed", patient_dir))
-
   outdir <- sprintf("%s/trimmed", patient_dir)
 
   # Trimeado por consola. Guarda el tiempo que tardo en ejecutarse
