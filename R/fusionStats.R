@@ -7,6 +7,7 @@
 #' @export
 #' @import openxlsx
 #' @import readxl
+#' @import ggpubr
 #' @examples fusionStats(patients_dir, Metadata, group = "group")
 
 fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", sobrevida = TRUE) {
@@ -138,11 +139,26 @@ fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", s
           LumA = n_distinct(ID[Grupo == "Luminal A"])
         ) %>%
         arrange(desc(Total_Apariciones))  # Ordenar por frecuencia
-    }
 
+    } else if(group == "Grupo" | group == "grupo") {
+      gen_counts <- TFB_long %>%
+        group_by(Gene) %>%
+        summarise(
+          Total_Apariciones = n(),  # Cantidad total de veces que aparece el gen
+          Muestras_Distintas = n_distinct(ID),  # Muestras únicas donde aparece
+          MET_Pos = n_distinct(ID[MTT == "MET+"]),  # Veces que aparece en muestras MET+,
+          MET_Neg = n_distinct(ID[MTT == "MET-"]),
+          GI = n_distinct(ID[Grupo == "Grupo I"]),
+          GII = n_distinct(ID[Grupo == "Grupo II"]),
+          GIII = n_distinct(ID[Grupo == "Grupo III"]),
+          GIV = n_distinct(ID[Grupo == "Grupo IV"])
+        ) %>%
+        arrange(desc(Total_Apariciones))
+      }
 
-  } else {
-    gen_counts <- TFB_long %>%
+    } else {
+
+      gen_counts <- TFB_long %>%
       group_by(Gene) %>%
       summarise(
         Total_Apariciones = n(),  # Cantidad total de veces que aparece el gen
@@ -163,6 +179,17 @@ fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", s
     analisis_sobrevida(stats = Stats_Fusions, metadata = Metadata)
   }
 
+  #Calcular % de fusiones que son kinasas - Por paciente:
+  library(dplyr)
+  colnames(Todos_FusionReport)[1] <- "ID"
+  kinase_counts <- Todos_FusionReport %>%
+    filter(confidence == "high") %>%
+    group_by(ID) %>%
+    summarise(n_kinase_fusions = sum(grepl("kinase", retained_protein_domains, ignore.case = TRUE))) %>%
+    ungroup()
+  Stats_Fusions <- merge(Stats_Fusions, kinase_counts, by = "ID")
+  Stats_Fusions$PercentageKinaseH <- (Stats_Fusions$n_kinase_fusions / Stats_Fusions$Fusiones_conf_H )*100
+
   return(list(Todos_FusionReport, Stats_Fusions, gen_counts))
 
 }
@@ -170,6 +197,7 @@ fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", s
 
 boxplots_TFB_MTT <- function(stats, group, cohorte) {
 
+  library(ggpubr)
   max <- max(stats$Fusiones_conf_H)
   paso <- round(max/10)
   stats$MTT <- as.factor(stats$MTT)
@@ -215,6 +243,8 @@ analisis_sobrevida <- function(stats, metadata) {
 
   stats$group <- ifelse(stats$Fusiones_conf_H > thr, "High", "Low")
   stats$group <- factor(stats$group, levels = c("Low","High"))
+
+  cohorte <- unique(stats$Cohorte)
 
   #incorporar informacion de sobrevida o sobrevida libre de progresion:
   stats_con_tiempo <- merge(stats, metadata[,c("ID", "tiempo")], by = "ID", all = FALSE)
