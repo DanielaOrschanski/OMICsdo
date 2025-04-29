@@ -27,9 +27,9 @@
   downloadSTAR()
   downloadArriba()
   #downloadBWA()
-  downloadGATK()
-  downloadPICARD()
-  downloadHG38()
+  #downloadGATK()
+  #downloadPICARD()
+  #downloadHG38()
 
 }
 
