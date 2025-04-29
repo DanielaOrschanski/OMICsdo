@@ -1,12 +1,20 @@
 #' @title index Reference genome with STAR
 #' @description Index genome reference version HG38 with STAR.
 #' @return Paths of FASTA and GTF(annotation) from the genome reference.
-indexRefSTAR <- function(AnnotationHG38, FastaHG38) {
-  message("ESTOY EN EL INDEX")
-  soft_directory <- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
-  #soft_directory <- sprintf("%s/OMICsdoSof", Sys.getenv('R_LIBS_USER'))
+#' @import rstudioapi
 
-  #softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", Sys.getenv('R_LIBS_USER') ))
+indexRefSTAR <- function(AnnotationHG38, FastaHG38) {
+
+  #The index needs at least 30 GB of storage, so you can choose where to store it:
+  soft_directory <- rstudioapi::selectDirectory(
+    caption = "Select the folder where to store hg38 and its index (30 GB required).
+    CANCEL if you want to store it in OMICsdoSof.")
+  print(soft_directory)
+  if(is.null(soft_directory)) {
+    soft_directory <- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
+  }
+  print(soft_directory)
+
   softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
   linea_software <- grep("(?i)HG38Index", softwares, ignore.case = TRUE, value = TRUE)
 
@@ -32,7 +40,6 @@ indexRefSTAR <- function(AnnotationHG38, FastaHG38) {
 
     #Writes down the paths in the txt
     HG38Index <- sprintf("%s/HG38/index", soft_directory)
-    #HG38Index <- sprintf("%s/HG38/indexP", soft_directory)
 
     #softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
     softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
@@ -40,13 +47,52 @@ indexRefSTAR <- function(AnnotationHG38, FastaHG38) {
     #write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
     write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
 
-    return(HG38Index)
+    softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+    linea_software <- grep("(?i)HG38Index", softwares, ignore.case = TRUE, value = TRUE)
+
+    HG38IndexSTAR <- strsplit(linea_software, split = " ")[[1]][2]
+
 
   } else {
     message("The reference genome was already indexed with STAR")
-    HG38IndexSTAR <- sprintf("%s/HG38/index", soft_directory)
-    return(HG38IndexSTAR)
+    #HG38IndexSTAR <- sprintf("%s/HG38/index", soft_directory)
+    HG38IndexSTAR <- strsplit(linea_software, split = " ")[[1]][2]
+
   }
+
+  #Tienen que coincidir el folder del fasta y la anotacion del hg38 con el folder donde esta el index: -----
+
+  folder_fasta <- dirname(FastaHG38)
+  folder_index <- dirname(HG38IndexSTAR)
+
+  if(!folder_index == folder_fasta) {
+
+    message("Since index will not be stored in OMICsdoSof, Fasta and Annotation files will be moved to the same folder as index.")
+    #Mueve el fasta y anot para que esten en el mismo folder que el index
+    name_fasta <- basename(FastaHG38)
+    FastaHG38_nuevo <- sprintf("%s/%s", folder_index, name_fasta)
+    file.rename(from = FastaHG38, to = FastaHG38_nuevo)
+
+    name_annot <- basename(AnnotationHG38)
+    Annot_nuevo <- sprintf("%s/%s", folder_index, name_annot)
+    file.rename(from = AnnotationHG38, to = Annot_nuevo)
+
+    #Cambia los paths en path_to_sof:
+    softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+      #eliminar los paths anteriores:
+    linea_software_fasta <- grep("(?i)HG38FASTA", softwares, ignore.case = TRUE, value = TRUE)
+    linea_software_annot <- grep("(?i)HG38Annotation", softwares, ignore.case = TRUE, value = TRUE)
+    softwares_eliminados <- softwares[-which(softwares %in% c(linea_software_fasta, linea_software_annot))]
+
+      #escribir los nuevos:
+    softwares_actualizado <- c(softwares_eliminados, sprintf("HG38FASTA %s", FastaHG38_nuevo), sprintf("HG38Annotation %s", Annot_nuevo))
+    write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+
+    AnnotationHG38 <- Annot_nuevo
+    FastaHG38 <- FastaHG38_nuevo
+  }
+
+  return(list(FastaHG38, AnnotationHG38, HG38IndexSTAR))
 }
 
 
@@ -129,7 +175,10 @@ downloadHG38 <- function() {
   }
 
 
-  index_dir_STAR <- indexRefSTAR(AnnotationHG38, FastaHG38)
+  paths <- indexRefSTAR(AnnotationHG38, FastaHG38)
+  FastaHG38 <- paths[[1]]
+  AnnotationHG38 <- paths[[2]]
+  index_dir_STAR <- paths[[3]]
 
   return(c(AnnotationHG38, FastaHG38, index_dir_STAR))
 
