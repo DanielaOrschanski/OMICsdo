@@ -26,6 +26,7 @@
   downloadTrimGalore()
   downloadSTAR()
   downloadArriba()
+  downloadSamtools()
   #downloadBWA()
   #downloadGATK()
   #downloadPICARD()
