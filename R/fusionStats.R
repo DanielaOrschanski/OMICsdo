@@ -10,14 +10,20 @@
 #' @import ggpubr
 #' @examples fusionStats(patients_dir, Metadata, group = "group")
 
-fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", sobrevida = TRUE) {
+fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", sobrevida = TRUE, Apareados = FALSE) {
 
   ids <-  list.dirs(path = patients_dir, full.names = TRUE, recursive = FALSE)
   length(ids)
   #ids <- ids[-1]
+  if(grepl(".git", ids)) {
+    ids <- ids[-which(grepl(".git", ids))]
+  }
 
   #MetadataSRA <- read.table("/media/4tb1/Daniela/Environ/Fusiones/SraRunTable.txt", header = TRUE, sep = ",")
   #colnames(MetadataSRA)[which(colnames(MetadataSRA) == "metastasis")] <- "MTT"
+
+  ids_analizar <- Metadata$ID
+  ids <- ids[which(basename(ids) %in% ids_analizar)]
 
 
   Todos_FusionReport <- data.frame()
@@ -30,12 +36,11 @@ fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", s
     fusions_file <- sprintf("%s/trimmed/%s_FusionReport.xlsx", id, i)
     FusionReport <- read_excel(fusions_file)
 
-    if(!missing(Metadata)) {
-      Grupo <- as.character(Metadata[which(Metadata$ID == i), group])
-      FusionReport$MTT <- as.character(Metadata[which(Metadata$ID == i), "MTT"])
-      FusionReport$Grupo <- Grupo
-
-    }
+    #if(!missing(Metadata)) {
+    #  Grupo <- as.character(Metadata[which(Metadata$ID == i), group])
+    #  FusionReport$MTT <- as.character(Metadata[which(Metadata$ID == i), "MTT"])
+    #  FusionReport$Grupo <- Grupo
+    #}
 
     FusionReport$ID <-i
     FusionReport_ID <- cbind(FusionReport$ID, FusionReport[,1:(ncol(FusionReport)-1)])
@@ -76,12 +81,12 @@ fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", s
     }
 
 
-    if(!missing(Metadata)) {
-      met <- as.character(Metadata[which(Metadata$ID == i), "MTT"])
-      Grupo <- as.character(Metadata[which(Metadata$ID == i), group])
-      Stats_Fusions[k, "Grupo"] <- Grupo
-      Stats_Fusions[k, "MTT"] <- met
-    }
+    #if(!missing(Metadata)) {
+    #  met <- as.character(Metadata[which(Metadata$ID == i), "MTT"])
+    #  Grupo <- as.character(Metadata[which(Metadata$ID == i), group])
+    #  Stats_Fusions[k, "Grupo"] <- Grupo
+    #  Stats_Fusions[k, "MTT"] <- met
+    #}
     Stats_Fusions$Cohorte <- cohorte
 
     k = k+1
@@ -92,13 +97,16 @@ fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", s
     Stats_Fusions[is.na(Stats_Fusions)] <- 0
   }
 
-  openxlsx::write.xlsx(as.data.frame(Todos_FusionReport), file = sprintf("%s/Todos-FusionReports_%s.xlsx", patients_dir, cohorte))
-  write.xlsx(Stats_Fusions, file = sprintf("%s/StatsFusions_%s.xlsx", patients_dir, cohorte))
+  Stats_Fusions <- merge(Stats_Fusions, Metadata, by = "ID")
+  #Stats_Fusions$Grupo <- Stats_Fusions[[group]]
 
-  TFB <- Todos_FusionReport[which(Todos_FusionReport$confidence == "high"), c(1,2,3,6,7, 16, 38, 37)]
+  openxlsx::write.xlsx(as.data.frame(Todos_FusionReport), file = sprintf("%s/Todos-FusionReports_%s.xlsx", patients_dir, cohorte))
+  #write.xlsx(Stats_Fusions, file = sprintf("%s/StatsFusions_%s.xlsx", patients_dir, cohorte))
+
+  #TFB <- Todos_FusionReport[which(Todos_FusionReport$confidence == "high"), c(1,2,3,6,7, 16, 38, 37)]
 
   # Unir gene1 y gene2 en una sola columna y mantener información de la muestra
-  TFB_long <- TFB %>%
+  TFB_long <- Todos_FusionReport %>%
     pivot_longer(cols = c(gene1, gene2), names_to = "Gene_Type", values_to = "Gene")
 
   str(TFB_long)
@@ -107,9 +115,18 @@ fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", s
   TFB_long$ID <- factor(TFB_long$ID)
 
   # Contabilizar métricas por gen
-  if(!is.na(group)) {
-    categorias_grupo <- unique(Stats_Fusions$Grupo)
+  gen_counts <- TFB_long %>%
+    group_by(Gene) %>%
+    summarise(
+      Total_Apariciones = n(),  # Cantidad total de veces que aparece el gen
+      Muestras_Distintas = n_distinct(ID)  # Muestras únicas donde aparece
+      #Apariciones_MET_Pos = n_distinct(ID[MTT == "MET+"]),  # Muestras únicas donde el gen aparece en MET+
+      #Apariciones_MET_Neg = n_distinct(ID[MTT == "MET-"])   # Muestras únicas donde el gen aparece en MET-
+    ) %>%
+    arrange(desc(Total_Apariciones))
 
+  if(!is.na(group) & !is.null(Stats_Fusions$MTT)) {
+    categorias_grupo <- unique(Stats_Fusions$Grupo)
     if(group == "tissue_type") {
       gen_counts <- TFB_long %>%
         group_by(Gene) %>%
@@ -155,90 +172,173 @@ fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", s
         ) %>%
         arrange(desc(Total_Apariciones))
       }
-
-    } else {
-
-      gen_counts <- TFB_long %>%
-      group_by(Gene) %>%
-      summarise(
-        Total_Apariciones = n(),  # Cantidad total de veces que aparece el gen
-        Muestras_Distintas = n_distinct(ID),  # Muestras únicas donde aparece
-        Apariciones_MET_Pos = n_distinct(ID[MTT == "MET+"]),  # Muestras únicas donde el gen aparece en MET+
-        Apariciones_MET_Neg = n_distinct(ID[MTT == "MET-"])   # Muestras únicas donde el gen aparece en MET-
-      ) %>%
-      arrange(desc(Total_Apariciones))
-
   }
   write.xlsx(gen_counts, file = sprintf("%s/GeneFusions_%s.xlsx", patients_dir, cohorte))
 
   #Generar boxplot:
-  boxplots_TFB_MTT(stats = Stats_Fusions, group = group, cohorte = cohorte)
+  boxplots_TFB_MTT(stats = Stats_Fusions, group = group, cohorte = cohorte, Apareados = Apareados)
 
   #Generar analisis sobrevida:
   if(sobrevida == TRUE) {
-    analisis_sobrevida(stats = Stats_Fusions, metadata = Metadata)
+    analisis_sobrevida(stats = Stats_Fusions, metadata = Metadata, thre = thre)
   }
 
   #Calcular % de fusiones que son kinasas - Por paciente:
   library(dplyr)
   colnames(Todos_FusionReport)[1] <- "ID"
-  kinase_counts <- Todos_FusionReport %>%
+
+  total_kinase_fus <- Todos_FusionReport %>%
+    group_by(ID) %>%
+    summarise(total_kinase_fus = sum(grepl("Protein_kinase_domain", retained_protein_domains, ignore.case = TRUE))) %>%
+    ungroup()
+
+  high_kinase_fus <- Todos_FusionReport %>%
     filter(confidence == "high") %>%
     group_by(ID) %>%
-    summarise(n_kinase_fusions = sum(grepl("kinase", retained_protein_domains, ignore.case = TRUE))) %>%
+    summarise(high_kinase_fus = sum(grepl("Protein_kinase_domain", retained_protein_domains, ignore.case = TRUE))) %>%
     ungroup()
-  Stats_Fusions <- merge(Stats_Fusions, kinase_counts, by = "ID")
-  Stats_Fusions$PercentageKinaseH <- (Stats_Fusions$n_kinase_fusions / Stats_Fusions$Fusiones_conf_H )*100
+
+  Stats_Fusions <- merge(Stats_Fusions, total_kinase_fus, by = "ID")
+  Stats_Fusions <- merge(Stats_Fusions, high_kinase_fus, by = "ID")
+
+  colnames(Stats_Fusions)
+  Stats_Fusions$PercentageKinaseHigh <- (Stats_Fusions$high_kinase_fus / Stats_Fusions$Fusiones_conf_H )*100
+  Stats_Fusions$PercentageKinase <- (Stats_Fusions$total_kinase_fus / Stats_Fusions$Cantidad_Fusiones )*100
+
+  write.xlsx(Stats_Fusions, file = sprintf("%s/StatsFusions_%s.xlsx", patients_dir, cohorte))
 
   return(list(Todos_FusionReport, Stats_Fusions, gen_counts))
 
 }
 
 
-boxplots_TFB_MTT <- function(stats, group, cohorte) {
+boxplots_TFB_MTT <- function(stats, group, cohorte, Apareados) {
 
   library(ggpubr)
   max <- max(stats$Fusiones_conf_H)
   paso <- round(max/10)
-  stats$MTT <- as.factor(stats$MTT)
+  #stats$MTT <- as.factor(stats$MTT)
 
   while (!is.null(dev.list())) dev.off()
 
-  box_TFB_MTT <- ggplot(stats, aes(x = MTT, y = Fusiones_conf_H, fill = MTT)) +
-    geom_violin(alpha = 0.5) +
-    geom_boxplot() +
-    geom_jitter(width = 0.2, size = 1, alpha = 0.7) +
-    labs(title = sprintf("FPR por MTT - %s", cohorte),
-         x = "MTT",
-         y = "FPR") +
-    theme_minimal() +
-    scale_y_continuous(limits = c(0, NA), breaks = seq(0, max +paso, by = paso)) +
-    stat_compare_means(method = "wilcox.test", label = "p.format")
+  if(!is.null(stats$MTT)) {
 
-  print(box_TFB_MTT)
+    # GRAFICO SEGUN MTT: -----------------------------------------------
+    if(Apareados == FALSE) {
+      test_result <- wilcox.test(Fusiones_conf_H ~ MTT, data = stats)
+    } else if (Apareados == TRUE) {
+      test_result <- wilcox.test(Fusiones_conf_H ~ MTT, data = stats, paired = TRUE)
+    }
 
-  if(!is.na(group)) { #Boxplot por subtipo:
-    box_TFB_MTT_Grupo <- ggplot(stats, aes(x = MTT, y = Fusiones_conf_H, fill = MTT)) +
+    p_value <- test_result$p.value
+    p_label <- sprintf("p = %.3g", p_value)
+
+    box_TFB_MTT <- ggplot(stats, aes(x = MTT, y = Fusiones_conf_H, fill = MTT)) +
       geom_violin(alpha = 0.5) +
       geom_boxplot() +
       geom_jitter(width = 0.2, size = 1, alpha = 0.7) +
-      labs(title = sprintf("FPR por MTT y Grupo - %s", cohorte),
+      labs(title = sprintf("FPR por MTT - %s", cohorte),
            x = "MTT",
            y = "FPR") +
       theme_minimal() +
-      #scale_y_continuous(limits = c(0, NA)) +
-      scale_y_continuous(limits = c(0, NA), breaks = seq(0, max+paso, by = paso)) +
-      stat_compare_means(method = "wilcox.test", label = "p.format") + # Agrega p-valor con Wilcoxon
-      facet_grid( ~ Grupo)  # Facet por Cohorte y Subtipo
+      scale_y_continuous(limits = c(0, NA), breaks = seq(0, max + paso, by = paso)) +
+      annotate("text", x = 1,
+               y = max(stats$Fusiones_conf_H, na.rm = TRUE) * 1.05,
+               label = p_label, hjust = 0, size = 4)
 
-    print(box_TFB_MTT_Grupo)
+    print(box_TFB_MTT)
+
+    if(!is.na(group)) {
+      # GRAFICO SEGUN MTT + GRUPO: -----------------------------------------------
+
+      library(dplyr)
+
+      stats$Grupo <- stats[[group]]
+      #elimino los NA si hay:
+      if(any(is.na(stats$Grupo))) {
+        stats <- stats[-which(is.na(stats$Grupo)),]
+      }
+      stats$Grupo <- as.factor(stats$Grupo)
+
+      wilcox_results <- stats %>%
+        group_by(Grupo) %>%
+        summarise(
+          p_value = if (n_distinct(MTT) == 2) {
+            wilcox.test(Fusiones_conf_H ~ MTT)$p.value
+          } else {
+            NA
+          } )
+
+      print(wilcox_results)
+
+      box_TFB_MTT_Grupo <- ggplot(stats, aes(x = MTT, y = Fusiones_conf_H, fill = MTT)) +
+        geom_violin(alpha = 0.5) +
+        geom_boxplot() +
+        geom_jitter(width = 0.2, size = 1, alpha = 0.7) +
+        labs(title = sprintf("FPR por MTT y Grupo - %s", cohorte),
+             x = "MTT",
+             y = "FPR") +
+        theme_minimal() +
+        scale_y_continuous(limits = c(0, NA), breaks = seq(0, max + paso, by = paso)) +
+        facet_grid(~ Grupo)
+
+      print(box_TFB_MTT_Grupo)
+    }
   }
+
+  if(!is.na(group)) {
+
+    stats$Grupo <- stats[[group]]
+    #elimino los NA si hay:
+    if(any(is.na(stats$Grupo))) {
+      stats <- stats[-which(is.na(stats$Grupo)),]
+    }
+    stats$Grupo <- as.factor(stats$Grupo)
+    table(stats$Grupo)
+
+    if( length(unique(stats$Grupo))>2 ) { #Kruskall
+      kruskal_result <- kruskal.test(Fusiones_conf_H ~ Grupo, data = stats)
+      p_value <- kruskal_result$p.value
+
+    } else if ( length(unique(stats$Grupo)) == 2 ) { #Wilcox
+      if(Apareados == FALSE) {
+        wilcox_result <- wilcox.test(Fusiones_conf_H ~ Grupo, data = stats)
+      } else if (Apareados == TRUE) {
+        wilcox_result <- wilcox.test(Fusiones_conf_H ~ Grupo, data = stats, paired = TRUE)
+      }
+      #wilcox_result <- wilcox.test(Fusiones_conf_H ~ Grupo, data = stats)
+      p_value <- wilcox_result$p.value
+    }
+
+    p_label <- sprintf("p = %.3g", p_value)
+
+    box_TFB_MTT <- ggplot(stats, aes(x = Grupo, y = Fusiones_conf_H, fill = Grupo)) +
+      geom_violin(alpha = 0.5) +
+      geom_boxplot() +
+      geom_jitter(width = 0.2, size = 1, alpha = 0.7) +
+      labs(title = sprintf("FPR por %s - %s", group, cohorte),
+           x = sprintf("%s", group),
+           y = "FPR") +
+      theme_minimal() +
+      #scale_y_continuous(limits = c(0, NA), breaks = seq(0, max + paso, by = paso)) +
+      annotate("text", x = 1, y = max(stats$Fusiones_conf_H, na.rm = TRUE) * 1.05,
+               label = p_label, hjust = 0, size = 4)
+
+    print(box_TFB_MTT)
+  }
+
 }
 
 #Necesito que metadata tenga info de tiempo y MTT:
-analisis_sobrevida <- function(stats, metadata) {
+#stats <- Stats_Fusions
+#metadata <- Metadata
+analisis_sobrevida <- function(stats, metadata, thre = "median") {
 
-  thr <- median(stats$Fusiones_conf_H)
+  stats$Fusiones_conf_H <- as.numeric(stats$Fusiones_conf_H)
+
+  thr <- ifelse(thre == "mean",
+                mean(stats$Fusiones_conf_H),
+                median(stats$Fusiones_conf_H))
   #thr <- mean(stats$Fusiones_conf_H)
 
   stats$group <- ifelse(stats$Fusiones_conf_H > thr, "High", "Low")
@@ -247,28 +347,49 @@ analisis_sobrevida <- function(stats, metadata) {
   cohorte <- unique(stats$Cohorte)
 
   #incorporar informacion de sobrevida o sobrevida libre de progresion:
-  stats_con_tiempo <- merge(stats, metadata[,c("ID", "tiempo")], by = "ID", all = FALSE)
+  #stats_con_tiempo <- merge(stats, metadata[,c("ID", "tiempo")], by = "ID", all = FALSE)
+  stats_con_tiempo <- stats[, c("ID", "tiempo", "evento", "Fusiones_conf_H", "Cohorte", "group")]
+
+  #Chequeo TIEMPO:
   stats_con_tiempo$tiempo <- as.numeric(stats_con_tiempo$tiempo)
   if(any(is.na(stats_con_tiempo$tiempo))) {
     stats_con_tiempo <- stats_con_tiempo[!is.na(stats_con_tiempo$tiempo),]
   }
-  stats_con_tiempo$evento <- ifelse(stats_con_tiempo$MTT == "MET-", 0, 1)
+
+  #Chequeo evento si es MTT o ya viene con evento:
+  if(!is.null(stats_con_tiempo$MTT)) {
+    stats_con_tiempo$evento <- ifelse(stats_con_tiempo$MTT == "MET-", 0, 1)
+  }
+  if(any(is.na(stats_con_tiempo$evento))) {
+    stats_con_tiempo <- stats_con_tiempo[!is.na(stats_con_tiempo$evento),]
+  }
+
+  stats_con_tiempo$evento <- as.numeric(stats_con_tiempo$evento)
+
   library("survival")
   library("survminer")
+
+  stats_con_tiempo$group <- factor(stats_con_tiempo$group, levels = c("High","Low"))
 
   surv_object <- Surv(time = stats_con_tiempo$tiempo, event = stats_con_tiempo$evento)
   fit1 <- survfit(surv_object ~ group, data = stats_con_tiempo)
 
+
+  if(!is.null(stats$MTT)) {
+    tipo_sobrevida <- "Libre de Metástasis"
+  } else {
+    tipo_sobrevida <- "OS"
+  }
   curva_sobrevida <- ggsurvplot(fit1, data = stats_con_tiempo, size = 1,  # change line size
                                 linetype = "strata", # change line type by groups
                                 palette = c("red","blue"), # custom color palette
                                 conf.int = TRUE, # Add confidence interval
                                 pval = TRUE, # Add p-value
                                 risk.table = TRUE, # add table
-                                title = sprintf("Curva Sobrevida Libre de Progresión - %s - thr = %s", cohorte, thr)
+                                title = sprintf("Curva Sobrevida %s - %s - thr = %s", tipo_sobrevida, cohorte, thr)
   )
 
   print(curva_sobrevida)
-  table_matrix <- table(stats_con_tiempo$group, stats_con_tiempo$MTT)
+  table_matrix <- table(stats_con_tiempo$group, stats_con_tiempo$evento)
   print(table_matrix)
 }

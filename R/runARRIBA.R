@@ -10,10 +10,10 @@ runARRIBA <- function(patient_dir, genomeversion = "hg38", assemblyVersion = "GR
 
   STAR <- downloadSTAR()
 
-  out <- downloadHG38()
-  AnnotationHG38 <- out[[1]]
-  FastaHG38 <- out[[2]]
-  index_dir <- out[[3]]
+  downloadHG38()
+  #AnnotationHG38 <- out[[2]]
+  #FastaHG38 <- out[[1]]
+  #index_dir <- out[[3]]
 
   file_list <- list.files(patient_dir)
 

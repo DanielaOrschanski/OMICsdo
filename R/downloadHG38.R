@@ -5,22 +5,22 @@
 
 indexRefSTAR <- function(AnnotationHG38, FastaHG38) {
 
-  #The index needs at least 30 GB of storage, so you can choose where to store it:
-  soft_directory <- rstudioapi::selectDirectory(
-    caption = "Select the folder where to store hg38 and its index (30 GB required).
-    CANCEL if you want to store it in OMICsdoSof.")
-  print(soft_directory)
-  if(is.null(soft_directory)) {
-    soft_directory <- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
-  }
-  print(soft_directory)
-
   softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
   linea_software <- grep("(?i)HG38Index", softwares, ignore.case = TRUE, value = TRUE)
 
   if(length(nchar(linea_software)) == 0) {
     #Index genome reference
     message("The genome reference will be index with STAR, please be patient this process may take some minutes.")
+    #The index needs at least 30 GB of storage, so you can choose where to store it:
+    soft_directory <- rstudioapi::selectDirectory(
+      caption = "Select the folder where to store hg38 and its index (30 GB required).
+    CANCEL if you want to store it in OMICsdoSof.")
+    print(soft_directory)
+    if(is.null(soft_directory)) {
+      soft_directory <- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
+    }
+    print(soft_directory)
+
     nThreads <- max(1,parallel::detectCores()-2)
 
     STAR <- downloadSTAR()
@@ -176,11 +176,11 @@ downloadHG38 <- function() {
 
 
   paths <- indexRefSTAR(AnnotationHG38, FastaHG38)
-  FastaHG38 <- paths[[1]]
-  AnnotationHG38 <- paths[[2]]
-  index_dir_STAR <- paths[[3]]
+  FastaHG38 <<- paths[[1]]
+  AnnotationHG38 <<- paths[[2]]
+  index_dir_STAR <<- paths[[3]]
 
-  return(c(AnnotationHG38, FastaHG38, index_dir_STAR))
+  return(c( FastaHG38, AnnotationHG38, index_dir_STAR))
 
 }
 

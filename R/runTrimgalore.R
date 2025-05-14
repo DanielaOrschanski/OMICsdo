@@ -5,6 +5,7 @@
 #' @return path of the trimmed folder which contained the trimmed files and was created inside the patient folder.
 #' @export
 runTrimgalore <- function(patient_dir,  trim_quality = 20) {
+
   # Chequeamos que esta descargado TrimGalore. En caso de no estarlo, lo descarga
   TrimGalore <- downloadTrimGalore()
   patient_id <- basename(patient_dir)
@@ -28,45 +29,47 @@ runTrimgalore <- function(patient_dir,  trim_quality = 20) {
     #       file_trim <- paste0(patient_dir, "/", file_list[endsWith(file_list, "val_1.fq")], sep=""))
 
     message("You have already trimmed this sample")
+    print("You have already trimmed this sample")
     return(sprintf("%s/trimmed", patient_dir))
-  }
-
-  dir.create(sprintf("%s/trimmed", patient_dir))
-  outdir <- sprintf("%s/trimmed", patient_dir)
-
-  # Trimeado por consola. Guarda el tiempo que tardo en ejecutarse
-  # PAIRED - END
-  t1 <- system.time(system2(command = TrimGalore,
-                            args =c("--paired",
-                                    gziped,
-                                    sprintf("-q %s", trim_quality),
-                                    paste0("--output_dir ", outdir),
-                                    fileR1,
-                                    fileR2,
-                                    paste0("--basename ", basename(patient_dir)))))
-
-  #stderr = file.path(outdir, "ErrLog.txt")))
-
-  #stderr = file.path(outdir, "ErrLog.txt")))
-
-  # Calculo el tamaño de los archivos de entrada sin trimmear
-  of.size1 <- file.info(fileR1)$size
-  of.size2 <- file.info(fileR2)$size
-
-  # Si el formato era .gz, el output se llamara tambien como .gz, porque TrimGalore asi lo genera
-  if (gziped == "--gzip") {
-    ofile <- paste0(outdir, "/", basename(patient_dir),"_val_1.fq.gz")
   } else {
-    ofile <- paste0(outdir, "/", basename(patient_dir),"_val_1.fq")
+    dir.create(sprintf("%s/trimmed", patient_dir))
+    outdir <- sprintf("%s/trimmed", patient_dir)
+
+    # Trimeado por consola. Guarda el tiempo que tardo en ejecutarse
+    # PAIRED - END
+    t1 <- system.time(system2(command = TrimGalore,
+                              args =c("--paired",
+                                      gziped,
+                                      sprintf("-q %s", trim_quality),
+                                      paste0("--output_dir ", outdir),
+                                      fileR1,
+                                      fileR2,
+                                      paste0("--basename ", basename(patient_dir)))))
+
+    #stderr = file.path(outdir, "ErrLog.txt")))
+
+    #stderr = file.path(outdir, "ErrLog.txt")))
+
+    # Calculo el tamaño de los archivos de entrada sin trimmear
+    of.size1 <- file.info(fileR1)$size
+    of.size2 <- file.info(fileR2)$size
+
+    # Si el formato era .gz, el output se llamara tambien como .gz, porque TrimGalore asi lo genera
+    if (gziped == "--gzip") {
+      ofile <- paste0(outdir, "/", basename(patient_dir),"_val_1.fq.gz")
+    } else {
+      ofile <- paste0(outdir, "/", basename(patient_dir),"_val_1.fq")
+    }
+
+    # Tamanos del archivo de salida
+    ot.size1 <- file.info(ofile)$size
+    ot.size2 <- file.info(stringr::str_replace_all(ofile,"val_1.","val_2."))$size
+
+    # No entiendo porque hace de return esta asignacion de variables
+    #return(c(ifile = fileR1, tfile = ofile , Time = t1, isize1 = of.size1, isize2 = of.size2,
+    #         tsize1 = ot.size1, tsize2 = ot.size2))
+    message("TrimGalore's analysis has finished!")
+    return(dirname(ofile))
   }
 
-  # Tamanos del archivo de salida
-  ot.size1 <- file.info(ofile)$size
-  ot.size2 <- file.info(stringr::str_replace_all(ofile,"val_1.","val_2."))$size
-
-  # No entiendo porque hace de return esta asignacion de variables
-  #return(c(ifile = fileR1, tfile = ofile , Time = t1, isize1 = of.size1, isize2 = of.size2,
-  #         tsize1 = ot.size1, tsize2 = ot.size2))
-  message("TrimGalore's analysis has finished!")
-  return(dirname(ofile))
 }

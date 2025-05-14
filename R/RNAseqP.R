@@ -17,8 +17,8 @@ RNAseqP <- function(patients_dir,
                     plotFastQC_PBSQ = FALSE,
                     R = "R1R2",
                     trim_quality = 30,
-                    RunARRIBA = FALSE,
-                    RunFeatureCounts = TRUE,
+                    RunARRIBA = TRUE,
+                    RunFeatureCounts = FALSE,
                     RunMIXCR = FALSE
                     ) {
 
@@ -32,17 +32,23 @@ RNAseqP <- function(patients_dir,
   times_registered <- c()
 
   file_list <- list.dirs(path = patients_dir, full.names = FALSE, recursive = FALSE)
+  if( any(grepl(".git", file_list)) ) {
+    file_list <- file_list[-which(grepl(".git", file_list))]
+  }
 
   #Functions applied to each patient one by one
-  #patient <- file_list[1]
+  #patient <- file_list[40]
   for (patient in file_list) {
     print(patient)
 
     R1 <- sprintf("%s/%s/%s_R1.fastq.gz", patients_dir, patient, patient)
     R2 <- sprintf("%s/%s/%s_R2.fastq.gz", patients_dir, patient, patient)
     fusion_report <- sprintf("%s/%s/trimmed/%s_FusionReport.xlsx", patients_dir, patient, patient)
+    bam <- sprintf("%s/%s/trimmed/%s_Aligned_out.bam", patients_dir, patient, patient)
+
 
     #if(file.exists(R1) & file.exists(R2) & !file.exists(fusion_report)) {
+    if( !file.exists(fusion_report)) {
       patient_dir <- sprintf("%s/%s", patients_dir, patient)
       #FASTQC
       FastQC_time <- system.time(runFastQC(patient_dir))
@@ -53,13 +59,17 @@ RNAseqP <- function(patients_dir,
       #TRIMGALORE
       #patient_dir <- "~/EnvironChile/Muestras/Co1099"
       #Returns trimmed folder inside patient's folder
-      TrimGalore_time <- system.time({
+      if(!file.exists(bam)) {
+        TrimGalore_time <- system.time({
         patient_dir_trim <<- runTrimgalore(patient_dir, trim_quality = trim_quality)
-      })
+        })
+      }
+
       #times_registered <- c(times_registered, TrimGalore_time[[3]])
       #softwares_runned <- c(softwares_runned, "TrimGalore")
 
       message(sprintf("The patient %s has already been processed with TrimGalore", patient))
+      patient_dir_trim <- sprintf("%s/trimmed", patient_dir)
 
       #FASTQC
       if (fastQC_after_trim == TRUE) {
@@ -105,7 +115,7 @@ RNAseqP <- function(patients_dir,
       }
     }
 
-  #}
+  }
 
   #Functions applied to all the patients together:
   if(plotFastQC_PBSQ == TRUE) {
