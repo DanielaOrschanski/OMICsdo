@@ -397,6 +397,7 @@ On the Linux command-line print:
 #' @title downloadArriba
 #' @description Downloads and decompresses the GATK software
 #' @return The path where the .exe file is located
+#' @export
 
 downloadArriba <- function() {
   soft_directory <- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
