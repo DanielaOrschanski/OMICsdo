@@ -48,7 +48,7 @@ RNAseqP <- function(patients_dir,
 
 
     #if(file.exists(R1) & file.exists(R2) & !file.exists(fusion_report)) {
-    if( !file.exists(fusion_report)) {
+    #if( !file.exists(fusion_report)) {
       patient_dir <- sprintf("%s/%s", patients_dir, patient)
       #FASTQC
       FastQC_time <- system.time(runFastQC(patient_dir))
@@ -113,7 +113,7 @@ RNAseqP <- function(patients_dir,
           message(sprintf("An error occurred while processing patient %s with ARRIBA: %s", patient, e$message))
         })
       }
-    }
+    #}
 
   }
 

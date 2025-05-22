@@ -10,22 +10,20 @@
 #' @import ggpubr
 #' @examples fusionStats(patients_dir, Metadata, group = "group")
 
-fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", sobrevida = TRUE, Apareados = FALSE, grupo_ids_apareados = NA) {
+fusionStatsV2 <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", sobrevida = TRUE, Apareados = FALSE) {
 
   ids <-  list.dirs(path = patients_dir, full.names = TRUE, recursive = FALSE)
   length(ids)
   #ids <- ids[-1]
-  if(any(grepl(".git", ids))) {
+  if(grepl(".git", ids)) {
     ids <- ids[-which(grepl(".git", ids))]
   }
 
   #MetadataSRA <- read.table("/media/4tb1/Daniela/Environ/Fusiones/SraRunTable.txt", header = TRUE, sep = ",")
   #colnames(MetadataSRA)[which(colnames(MetadataSRA) == "metastasis")] <- "MTT"
 
-  if(!all(is.na(Metadata))) {
-    ids_analizar <- Metadata$ID
-    ids <- ids[which(basename(ids) %in% ids_analizar)]
-  }
+  ids_analizar <- Metadata$ID
+  ids <- ids[which(basename(ids) %in% ids_analizar)]
 
 
   Todos_FusionReport <- data.frame()
@@ -99,11 +97,13 @@ fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", s
     Stats_Fusions[is.na(Stats_Fusions)] <- 0
   }
 
-  if(!all(is.na(Metadata))) {
-    Stats_Fusions <- merge(Stats_Fusions, Metadata, by = "ID")
-  }
+  Stats_Fusions <- merge(Stats_Fusions, Metadata, by = "ID")
+  #Stats_Fusions$Grupo <- Stats_Fusions[[group]]
 
   openxlsx::write.xlsx(as.data.frame(Todos_FusionReport), file = sprintf("%s/Todos-FusionReports_%s.xlsx", patients_dir, cohorte))
+  #write.xlsx(Stats_Fusions, file = sprintf("%s/StatsFusions_%s.xlsx", patients_dir, cohorte))
+
+  #TFB <- Todos_FusionReport[which(Todos_FusionReport$confidence == "high"), c(1,2,3,6,7, 16, 38, 37)]
 
   # Unir gene1 y gene2 en una sola columna y mantener información de la muestra
   TFB_long <- Todos_FusionReport %>%
@@ -115,12 +115,13 @@ fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", s
   TFB_long$ID <- factor(TFB_long$ID)
 
   # Contabilizar métricas por gen
-  library(dplyr)
   gen_counts <- TFB_long %>%
     group_by(Gene) %>%
     summarise(
       Total_Apariciones = n(),  # Cantidad total de veces que aparece el gen
       Muestras_Distintas = n_distinct(ID)  # Muestras únicas donde aparece
+      #Apariciones_MET_Pos = n_distinct(ID[MTT == "MET+"]),  # Muestras únicas donde el gen aparece en MET+
+      #Apariciones_MET_Neg = n_distinct(ID[MTT == "MET-"])   # Muestras únicas donde el gen aparece en MET-
     ) %>%
     arrange(desc(Total_Apariciones))
 
@@ -170,15 +171,12 @@ fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", s
           GIV = n_distinct(ID[Grupo == "Grupo IV"])
         ) %>%
         arrange(desc(Total_Apariciones))
-    }
+      }
   }
-  library(openxlsx)
   write.xlsx(gen_counts, file = sprintf("%s/GeneFusions_%s.xlsx", patients_dir, cohorte))
 
   #Generar boxplot:
-  if(!all(is.na(Metadata))) {
-    boxplots_TFB_MTT(stats = Stats_Fusions, group = group, cohorte = cohorte, Apareados = Apareados, grupo_ids_apareados = grupo_ids_apareados)
-  }
+  boxplots_TFB_MTT(stats = Stats_Fusions, group = group, cohorte = cohorte, Apareados = Apareados)
 
   #Generar analisis sobrevida:
   if(sobrevida == TRUE) {
@@ -200,8 +198,8 @@ fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", s
     summarise(high_kinase_fus = sum(grepl("Protein_kinase_domain", retained_protein_domains, ignore.case = TRUE))) %>%
     ungroup()
 
-  Stats_Fusions <- merge(Stats_Fusions, total_kinase_fus, by = "ID", all.x = TRUE)
-  Stats_Fusions <- merge(Stats_Fusions, high_kinase_fus, by = "ID", all.x = TRUE)
+  Stats_Fusions <- merge(Stats_Fusions, total_kinase_fus, by = "ID")
+  Stats_Fusions <- merge(Stats_Fusions, high_kinase_fus, by = "ID")
 
   colnames(Stats_Fusions)
   Stats_Fusions$PercentageKinaseHigh <- (Stats_Fusions$high_kinase_fus / Stats_Fusions$Fusiones_conf_H )*100
@@ -214,7 +212,7 @@ fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", s
 }
 
 
-boxplots_TFB_MTT <- function(stats, group, cohorte, Apareados = FALSE, grupo_ids_apareados = NA) {
+boxplots_TFB_MTT <- function(stats, group, cohorte, Apareados) {
 
   library(ggpubr)
   max <- max(stats$Fusiones_conf_H)
@@ -302,45 +300,17 @@ boxplots_TFB_MTT <- function(stats, group, cohorte, Apareados = FALSE, grupo_ids
       kruskal_result <- kruskal.test(Fusiones_conf_H ~ Grupo, data = stats)
       p_value <- kruskal_result$p.value
 
-    } else if ( length(unique(stats$Grupo)) == 2 ) { #Wilcox ------------
-
+    } else if ( length(unique(stats$Grupo)) == 2 ) { #Wilcox
       if(Apareados == FALSE) {
-        wilcox_result_FPR <- wilcox.test(Fusiones_conf_H ~ Grupo, data = stats)
-        p_value_FPR <- wilcox_result_FPR$p.value
-
-        wilcox_result_Fus <- wilcox.test(Fusiones_conf_H ~ Grupo, data = stats)
-        p_value_Fus <- wilcox_result_Fus$p.value
-
+        wilcox_result <- wilcox.test(Fusiones_conf_H ~ Grupo, data = stats)
       } else if (Apareados == TRUE) {
-
-        #APAREADOS - FPR
-        stats$isolate <- stats[[grupo_ids_apareados]]
-        stats_wide <- pivot_wider(
-          stats,
-          id_cols = isolate, #nombre que define los ID apareados
-          names_from = Grupo,
-          values_from = Fusiones_conf_H
-        )
-        wilcox_result_FPR <- wilcox.test(stats_wide[[2]], stats_wide[[3]], paired = TRUE)
-        p_value_FPR <- wilcox_result_FPR$p.value
-
-        #APAREADOS - Fus
-        stats_wide <- pivot_wider(
-          stats,
-          id_cols = isolate, #nombre que define los ID apareados
-          names_from = Grupo,
-          values_from = Cantidad_Fusiones
-        )
-        wilcox_result_Fus <- wilcox.test(stats_wide[[2]], stats_wide[[3]], paired = TRUE)
-        p_value_Fus <- wilcox_result_Fus$p.value
+        wilcox_result <- wilcox.test(Fusiones_conf_H ~ Grupo, data = stats, paired = TRUE)
       }
       #wilcox_result <- wilcox.test(Fusiones_conf_H ~ Grupo, data = stats)
-      #p_value <- wilcox_result$p.value
-      #-------------------------------------------
+      p_value <- wilcox_result$p.value
     }
 
-    p_label_FPR <- sprintf("p = %.3g", p_value_FPR)
-    p_label_Fus <- sprintf("p = %.3g", p_value_Fus)
+    p_label <- sprintf("p = %.3g", p_value)
 
     box_TFB_MTT <- ggplot(stats, aes(x = Grupo, y = Fusiones_conf_H, fill = Grupo)) +
       geom_violin(alpha = 0.5) +
@@ -352,57 +322,9 @@ boxplots_TFB_MTT <- function(stats, group, cohorte, Apareados = FALSE, grupo_ids
       theme_minimal() +
       #scale_y_continuous(limits = c(0, NA), breaks = seq(0, max + paso, by = paso)) +
       annotate("text", x = 1, y = max(stats$Fusiones_conf_H, na.rm = TRUE) * 1.05,
-               label = p_label_FPR, hjust = 0, size = 4)
+               label = p_label, hjust = 0, size = 4)
 
     print(box_TFB_MTT)
-
-    box_Fus_MTT <- ggplot(stats, aes(x = Grupo, y = Cantidad_Fusiones, fill = Grupo)) +
-      geom_violin(alpha = 0.5) +
-      geom_boxplot() +
-      geom_jitter(width = 0.2, size = 1, alpha = 0.7) +
-      labs(title = sprintf("Fus por %s - %s", group, cohorte),
-           x = sprintf("%s", group),
-           y = "Fus") +
-      theme_minimal() +
-      #scale_y_continuous(limits = c(0, NA), breaks = seq(0, max + paso, by = paso)) +
-      annotate("text", x = 1, y = max(stats$Fusiones_conf_H, na.rm = TRUE) * 1.05,
-               label = p_label_Fus, hjust = 0, size = 4)
-
-    print(box_Fus_MTT)
-
-    if(Apareados == TRUE) {
-
-      box_TFB_MTT <- ggplot(stats, aes(x = Grupo, y = Fusiones_conf_H, fill = Grupo)) +
-        geom_violin(alpha = 0.5) +
-        geom_boxplot() +
-        geom_jitter(width = 0.2, size = 1, alpha = 0.7) +
-        # Añadir líneas punteadas entre puntos con el mismo isolate
-        geom_line(aes(group = isolate), color = "gray10", linetype = "dotted", alpha = 0.6) +
-        labs(title = sprintf("FPR por %s - %s", group, cohorte),
-             x = sprintf("%s", group),
-             y = "FPR") +
-        theme_minimal() +
-        annotate("text", x = 1, y = max(stats$Fusiones_conf_H, na.rm = TRUE) * 1.05,
-                 label = p_label_FPR, hjust = 0, size = 4)
-
-      print(box_TFB_MTT)
-
-      box_Fus_MTT <- ggplot(stats, aes(x = Grupo, y = Cantidad_Fusiones, fill = Grupo)) +
-        geom_violin(alpha = 0.5) +
-        geom_boxplot() +
-        geom_jitter(width = 0.2, size = 1, alpha = 0.7) +
-        # Añadir líneas punteadas entre puntos con el mismo isolate
-        geom_line(aes(group = isolate), color = "gray10", linetype = "dotted", alpha = 0.6) +
-        labs(title = sprintf("Fus por %s - %s", group, cohorte),
-             x = sprintf("%s", group),
-             y = "Fus") +
-        theme_minimal() +
-        annotate("text", x = 1, y = max(stats$Fusiones_conf_H, na.rm = TRUE) * 1.05,
-                 label = p_label_Fus, hjust = 0, size = 4)
-
-      print(box_Fus_MTT)
-
-    }
   }
 
 }
