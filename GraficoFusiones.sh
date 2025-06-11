@@ -29,6 +29,7 @@ samtools index /media/respaldo8t/Daniela/Gastrico-PRJNA438844-6p/SRR6853678/fusi
 #-------------------------------------------------------------------------
 
 cd /media/4tb2/Daniela/Environ/FusionesActualizado/Tiroides/CarcinomasOncociticos-PRJNA445446/SRR6888826/trimmed
+/media/respaldo8t/Daniela/Gastrico-PRJNA438844-6p/SRR6853678/trimmed
 
 database="/home/juan/R/x86_64-pc-linux-gnu-library/4.1/OMICsdoSof/Arriba/arriba_v2.4.0/database"
 AnnotationHG38="/home/juan/R/x86_64-pc-linux-gnu-library/4.1/OMICsdoSof/HG38/Homo_sapiens.GRCh38.110.gtf"
@@ -40,3 +41,6 @@ AnnotationHG38="/home/juan/R/x86_64-pc-linux-gnu-library/4.1/OMICsdoSof/HG38/Hom
   --annotation=/home/juan/R/x86_64-pc-linux-gnu-library/4.1/OMICsdoSof/HG38/Homo_sapiens.GRCh38.110.gtf \
   --cytobands=$database/cytobands_hg38_GRCh38_v2.4.0.tsv \
   --proteinDomains=$database/protein_domains_hg38_GRCh38_v2.4.0.gff3
+
+
+

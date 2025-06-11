@@ -300,7 +300,10 @@ boxplots_TFB_MTT <- function(stats, group, cohorte, Apareados = FALSE, grupo_ids
 
     if( length(unique(stats$Grupo))>2 ) { #Kruskall
       kruskal_result <- kruskal.test(Fusiones_conf_H ~ Grupo, data = stats)
-      p_value <- kruskal_result$p.value
+      p_value_FPR <- kruskal_result$p.value
+
+      kruskal_result <- kruskal.test(Cantidad_Fusiones ~ Grupo, data = stats)
+      p_value_Fus <- kruskal_result$p.value
 
     } else if ( length(unique(stats$Grupo)) == 2 ) { #Wilcox ------------
 
@@ -308,7 +311,7 @@ boxplots_TFB_MTT <- function(stats, group, cohorte, Apareados = FALSE, grupo_ids
         wilcox_result_FPR <- wilcox.test(Fusiones_conf_H ~ Grupo, data = stats)
         p_value_FPR <- wilcox_result_FPR$p.value
 
-        wilcox_result_Fus <- wilcox.test(Fusiones_conf_H ~ Grupo, data = stats)
+        wilcox_result_Fus <- wilcox.test(Cantidad_Fusiones ~ Grupo, data = stats)
         p_value_Fus <- wilcox_result_Fus$p.value
 
       } else if (Apareados == TRUE) {

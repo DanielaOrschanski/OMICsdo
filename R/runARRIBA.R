@@ -10,9 +10,9 @@ runARRIBA <- function(patient_dir, genomeversion = "hg38", assemblyVersion = "GR
 
   STAR <- downloadSTAR()
 
-  downloadHG38()
-  #AnnotationHG38 <- out[[2]]
-  #FastaHG38 <- out[[1]]
+  out<- downloadHG38()
+  AnnotationHG38 <- out[[2]]
+  FastaHG38 <- out[[1]]
   #index_dir <- out[[3]]
 
   file_list <- list.files(patient_dir)
@@ -23,35 +23,34 @@ runARRIBA <- function(patient_dir, genomeversion = "hg38", assemblyVersion = "GR
     patient_id <- basename(patient_dir)
   }
 
+  bam_file <- paste0(patient_dir, "/", file_list[endsWith(file_list, "Aligned_out.bam")], sep="")
+  fusion.file <- sprintf("%s/%s_fusions.tsv", patient_dir, patient_id)
+  fusion.discarded.file <- sprintf("%s/%s_fusions_discarded.tsv", patient_dir, patient_id)
 
   #Evita repetir el analisis si ya fue hecho
   if (!(length(nchar(file_list[endsWith(file_list, "FusionReport.xlsx")])) == 0)) {
     message("The ARRIBA for this sample has already been done.")
-    return(paste0(patient_dir, "/", file_list[endsWith(file_list, "FusionReport.xlsx")], sep=""))
+    #return(paste0(patient_dir, "/", file_list[endsWith(file_list, "FusionReport.xlsx")], sep=""))
+
+  } else {
+    if ((length(nchar(bam_file)) == 0)) {
+      stop("There are no BAM files in this directory")
+    }
+
+    system2(command = ARRIBA,
+            args = c(paste0("-x ", bam_file),
+                     #"-I",
+                     paste0("-o ", fusion.file),
+                     paste0("-O ", fusion.discarded.file),
+                     paste0("-a ", FastaHG38),
+                     paste0("-g ", AnnotationHG38),
+                     paste0("-b ", sprintf("%s/blacklist_%s_%s_v2.4.0.tsv.gz", DB_Arriba, genomeversion, assemblyVersion)),
+                     paste0("-k ", sprintf("%s/known_fusions_%s_%s_v2.4.0.tsv.gz", DB_Arriba, genomeversion, assemblyVersion)),
+                     paste0("-t ", sprintf("%s/known_fusions_%s_%s_v2.4.0.tsv.gz", DB_Arriba, genomeversion, assemblyVersion)),
+                     paste0("-p ", sprintf("%s/protein_domains_%s_%s_v2.4.0.gff3", DB_Arriba, genomeversion,assemblyVersion))
+            ))
+
   }
-
-
-  bam_file <- paste0(patient_dir, "/", file_list[endsWith(file_list, "Aligned_out.bam")], sep="")
-
-  if ((length(nchar(bam_file)) == 0)) {
-    stop("There are no BAM files in this directory")
-  }
-
-  fusion.file <- sprintf("%s/%s_fusions.tsv", patient_dir, patient_id)
-  fusion.discarded.file <- sprintf("%s/%s_fusions_discarded.tsv", patient_dir, patient_id)
-
-  system2(command = ARRIBA,
-          args = c(paste0("-x ", bam_file),
-                   #"-I",
-                   paste0("-o ", fusion.file),
-                   paste0("-O ", fusion.discarded.file),
-                   paste0("-a ", FastaHG38),
-                   paste0("-g ", AnnotationHG38),
-                   paste0("-b ", sprintf("%s/blacklist_%s_%s_v2.4.0.tsv.gz", DB_Arriba, genomeversion, assemblyVersion)),
-                   paste0("-k ", sprintf("%s/known_fusions_%s_%s_v2.4.0.tsv.gz", DB_Arriba, genomeversion, assemblyVersion)),
-                   paste0("-t ", sprintf("%s/known_fusions_%s_%s_v2.4.0.tsv.gz", DB_Arriba, genomeversion, assemblyVersion)),
-                   paste0("-p ", sprintf("%s/protein_domains_%s_%s_v2.4.0.gff3", DB_Arriba, genomeversion,assemblyVersion))
-          ))
 
   #if(!all(file.exists(fusion.file,fusion.discarded.file))){
   #  cat(paste0("\nFUSION FILES NOT FOUND\n",fusion.file,"\n", fusion.discarded.file))
@@ -60,6 +59,36 @@ runARRIBA <- function(patient_dir, genomeversion = "hg38", assemblyVersion = "GR
   fusionsTable <- generateFusionsReport(fusion.file, assemblyVersion, patient_id, patient_dir)
   message("ARRIBA's analysis has finished!")
 
+  # DRAW FUSIONS: -------------------------------------------------------------------------------
+  sorted_bam <- paste0(patient_dir, "/", patient_id, "_sorted.bam", sep="")
+
+  if(!file.exists(sorted_bam)) {
+
+    # Sort BAM
+    system2("samtools", args = c("sort", "-@","8", "-o", sorted_bam, bam_file))
+
+    # Index sorted BAM
+    system2("samtools", args = c("index", "-@","8", sorted_bam))
+
+  }
+
+  #AnnotationHG38="/home/juan/R/x86_64-pc-linux-gnu-library/4.1/OMICsdoSof/HG38/Homo_sapiens.GRCh38.110.gtf"
+  fusions_pdf <- sprintf("%s/%s_fusions.pdf", patient_dir, patient_id)
+
+  if(!file.exists(fusions_pdf)) {
+    message("The fusions will be drawn up")
+    system2(command = sprintf("%s/draw_fusions.R", dirname(ARRIBA)),
+          args = c(paste0("--fusions=", fusion.file),
+                   paste0("--alignments=", sorted_bam),
+                   paste0("--output=", fusions_pdf),
+                   paste0("--annotation=", AnnotationHG38),
+                   paste0("--cytobands=", DB_Arriba, "/cytobands_hg38_GRCh38_v2.4.0.tsv" ),
+                   paste0("--proteinDomains=", DB_Arriba, "/protein_domains_hg38_GRCh38_v2.4.0.gff3" )
+          ))
+
+  }
+
+  message("The fusions have been drawn")
   return(fusionsTable)
 }
 

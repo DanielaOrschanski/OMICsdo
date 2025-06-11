@@ -1,17 +1,17 @@
 {
     "sortOrder": [
         {
+            "columnIndex": 4,
+            "ascending": false
+        },
+        {
             "columnIndex": 2,
             "ascending": true
         },
         {
             "columnIndex": 3,
             "ascending": false
-        },
-        {
-            "columnIndex": 4,
-            "ascending": true
         }
     ],
-    "path": "/media/16TBDisk/Daniela/Environ/Fibroblastos/MuestrasFibroblastos/Copia de SQ24017300-R24005629LR01-Br1943_combined_R1.trimmed.fastq.gz"
+    "path": "/media/16TBDisk/Daniela"
 }
