@@ -12,8 +12,8 @@ RNAseqP(
   plotFastQC_PBSQ = FALSE,
   R = "R1R2",
   trim_quality = 30,
-  RunARRIBA = FALSE,
-  RunFeatureCounts = TRUE,
+  RunARRIBA = TRUE,
+  RunFeatureCounts = FALSE,
   RunMIXCR = FALSE
 )
 }
