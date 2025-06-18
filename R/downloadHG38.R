@@ -158,8 +158,8 @@ downloadHG38 <- function() {
     #FastaHG38 <<- sprintf("%s/HG38/GCA_000001405.15_GRCh38_genomic.fna", soft_directory)
 
     #Indexar con bwa la referencia:
-    message("The reference will be indexed by BWA")
-    system(sprintf("bwa index %s"), FastaHG38)
+    #message("The reference will be indexed by BWA")
+    #system(sprintf("bwa index %s"), FastaHG38)
      #Writes down the paths in the txt
     #softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", Sys.getenv('R_LIBS_USER')))
     softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
