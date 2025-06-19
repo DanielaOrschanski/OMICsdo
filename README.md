@@ -16,6 +16,7 @@ install_github("wjawaid/enrichR")
 
 install_github(repo = "https://github.com/DanielaOrschanski/OMICsdo.git")
 
+In the installation, a directory path will be asked in order to store all the softwares required. Check the availability of 20 GB of space.
 
 ## Authors
 
