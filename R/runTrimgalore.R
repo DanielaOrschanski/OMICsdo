@@ -29,7 +29,7 @@ runTrimgalore <- function(patient_dir,  trim_quality = 20) {
     #       file_trim <- paste0(patient_dir, "/", file_list[endsWith(file_list, "val_1.fq")], sep=""))
 
     message("You have already trimmed this sample")
-    print("You have already trimmed this sample")
+    
     return(sprintf("%s/trimmed", patient_dir))
   } else {
     dir.create(sprintf("%s/trimmed", patient_dir))
