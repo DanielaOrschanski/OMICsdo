@@ -61,14 +61,15 @@ runARRIBA <- function(patient_dir, genomeversion = "hg38", assemblyVersion = "GR
 
   # DRAW FUSIONS: -------------------------------------------------------------------------------
   sorted_bam <- paste0(patient_dir, "/", patient_id, "_sorted.bam", sep="")
-
+  Samtools <- downloadSamtools(soft_directory)
+  
   if(!file.exists(sorted_bam)) {
 
     # Sort BAM
-    system2("samtools", args = c("sort", "-@","8", "-o", sorted_bam, bam_file))
+    system2(Samtools, args = c("sort", "-@","8", "-o", sorted_bam, bam_file))
 
     # Index sorted BAM
-    system2("samtools", args = c("index", "-@","8", sorted_bam))
+    system2(Samtools, args = c("index", "-@","8", sorted_bam))
 
   }
 
