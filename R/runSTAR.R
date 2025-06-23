@@ -9,7 +9,7 @@ runSTAR <- function(patient_dir, twoPass = c("None","Basic")) {
 
   #STAR <- downloadSTAR()
 
-  out <- downloadHG38()
+  out <- downloadHG38(soft_directory)
   AnnotationHG38 <- out[[2]]
   FastaHG38 <- out[[1]]
   index_dir <- out[[3]]
