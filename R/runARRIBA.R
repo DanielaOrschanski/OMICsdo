@@ -5,12 +5,12 @@
 
 runARRIBA <- function(patient_dir, genomeversion = "hg38", assemblyVersion = "GRCh38") {
 
-  ARRIBA <- downloadArriba()
+  ARRIBA <- downloadArriba(soft_directory)
   DB_Arriba <- sprintf("%s/database", dirname(ARRIBA))
 
-  STAR <- downloadSTAR()
+  STAR <- downloadSTAR(soft_directory)
 
-  out<- downloadHG38()
+  out<- downloadHG38(soft_directory)
   AnnotationHG38 <- out[[2]]
   FastaHG38 <- out[[1]]
   #index_dir <- out[[3]]
