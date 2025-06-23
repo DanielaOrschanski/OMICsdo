@@ -24,7 +24,10 @@ RNAseqP <- function(patients_dir,
 
   #patients_dir <- "~/EnvironChile/Muestras"
   if (genomeRef == "HG38") {
-    downloadHG38()
+    out <- downloadHG38(soft_directory)
+    FastaHG38 <- out[[1]]
+    AnnotationHG38 <- out[[2]]
+    index_dir_STAR <- out[[3]]
   }
 
   #Vectors that will be filled and show on a dataframe in the end of the function
