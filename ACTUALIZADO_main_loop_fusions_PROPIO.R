@@ -15,8 +15,8 @@ cytobandsFile = "/home/juan/R/x86_64-pc-linux-gnu-library/4.1/OMICsdoSof/Arriba/
 proteinDomainsFile = "/home/juan/R/x86_64-pc-linux-gnu-library/4.1/OMICsdoSof/Arriba/arriba_v2.4.0/database/protein_domains_hg38_GRCh38_v2.4.0.gff3"
 sampleName = "SRR6888826"
 exonsFile = "/home/juan/R/x86_64-pc-linux-gnu-library/4.1/OMICsdoSof/HG38/Homo_sapiens.GRCh38.110.gtf"
-color1="steelblue"
-color2="indianred"
+color1="purple"
+color2="orange"
 
 
 fusion = 2
@@ -355,7 +355,7 @@ for (fusion in 1:nrow(fusions)) {
       drawCoverage(min(exons1$left), max(exons1$right), yCoverage, coverage1, min(exons1$start), max(exons1$end), color1)
     }
 
-    lines(c(breakpoint1, breakpoint1), c(yCoverage, yCoverage+0.3), col = "deepskyblue", lty = 2, lwd = 1)
+    lines(c(breakpoint1, breakpoint1), c(yCoverage, yCoverage+0.3), col = "purple", lty = 2, lwd = 1)
 
     # plot coverage 2
     rect(gene2Offset+min(exons2$left), yCoverage, gene2Offset+max(exons2$right), yCoverage+0.3, col="#eeeeee", border=NA)
@@ -366,7 +366,7 @@ for (fusion in 1:nrow(fusions)) {
     } else {
       drawCoverage(gene2Offset+min(exons2$left), gene2Offset+max(exons2$right), yCoverage, coverage2, min(exons2$start), max(exons2$end), color2)
     }
-    lines(c(gene2Offset+breakpoint2, gene2Offset+breakpoint2), c(yCoverage, yCoverage+0.3), col = "red", lty = 2, lwd = 1)
+    lines(c(gene2Offset+breakpoint2, gene2Offset+breakpoint2), c(yCoverage, yCoverage+0.3), col = "darkorange", lty = 2, lwd = 1)
 
   }
 
@@ -392,7 +392,7 @@ for (fusion in 1:nrow(fusions)) {
   }
   #2. Dibujá el área sombreada
   rect(rect_x_start, yCoverage, rect_x_end, yCoverage+0.3,
-       col = adjustcolor("lightblue", alpha.f = 0.5), border = NA)
+       col = adjustcolor("#DCD0FF", alpha.f = 0.5), border = NA)
 
   #GEN2:
   #1. Definí los extremos según la dirección
@@ -405,7 +405,7 @@ for (fusion in 1:nrow(fusions)) {
   }
   #2. Dibujá el área sombreada
   rect(gene2Offset + rect_x_start, yCoverage, gene2Offset + rect_x_end, yCoverage+0.3,
-       col = adjustcolor("lightcoral", alpha.f = 0.5), border = NA)
+       col = adjustcolor("#FFDBBB", alpha.f = 0.5), border = NA)
 
 
   #-----------------------------------------------------------------------

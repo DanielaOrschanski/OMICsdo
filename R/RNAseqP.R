@@ -18,8 +18,9 @@ RNAseqP <- function(patients_dir,
                     R = "R1R2",
                     trim_quality = 30,
                     RunARRIBA = TRUE,
-                    RunFeatureCounts = FALSE,
-                    RunMIXCR = FALSE
+                    RunFeatureCounts = TRUE,
+                    RunMIXCR = FALSE,
+                    cohort_name
                     ) {
 
   #patients_dir <- "~/EnvironChile/Muestras"
@@ -105,10 +106,9 @@ RNAseqP <- function(patients_dir,
             genomeversion = "hg19"
             assemblyVersion = "GRCh37"
           }
-          ARRIBA_time <- runARRIBA(patient_dir_trim, genomeversion = genomeversion, assemblyVersion = assemblyVersion )
-          #times_registered <- c(times_registered, ARRIBA_time[[3]])
-          #softwares_runned <- c(softwares_runned, "ARRIBA")
+          ARRIBA <- runARRIBA(patient_dir_trim, genomeversion = genomeversion, assemblyVersion = assemblyVersion )
           message(sprintf("The patient %s has already been processed with ARRIBA", patient))
+
         }, error = function(e) {
           message(sprintf("An error occurred while processing patient %s with ARRIBA: %s", patient, e$message))
         })
@@ -145,6 +145,18 @@ RNAseqP <- function(patients_dir,
   }
 
   #TimeRegistration <- data.frame("Software" = softwares_runned, "Time" = times_registered)
+
+  #Fusions Reports:
+  out <- fusionStats(
+    patients_dir = patients_dir,
+    cohorte = cohort_name)
+  fusions_report <- out[[1]]
+
+  colnames(fusions_report)[1] <- "ID"
+  protein_df <- sprintf()
+  fusions_report_anotated <- AnotateFusions(protein_df, fusions_report)
+  fusions_report_anotated_domain <- GetDomains(fusions_report = fusions_report_anotated, path_dir = path_dir)
+
 
   return(c(softwares_runned, times_registered))
 

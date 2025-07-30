@@ -9,28 +9,35 @@
 
   #libPath <- Sys.getenv('R_LIBS_USER')
 
+  #omicsdo_sof <<- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
+
+  #The index needs at least 30 GB of storage, so you can choose where to store it:
+  soft_directory <<- rstudioapi::selectDirectory(
+    caption = "Select the folder where to store all the softwares (30 GB required)")
+  print(soft_directory)
+  omicsdo_sof <<- soft_directory
+
   #Folder where the softwares will be saved
-  if(!(file.exists(sprintf("%s/OMICsdoSof", libPath)))) {
-    dir.create(sprintf("%s/OMICsdoSof", libPath))
+  if(!(file.exists(sprintf("%s/OMICsdoSof", omicsdo_sof)))) {
+    dir.create(sprintf("%s/OMICsdoSof", omicsdo_sof))
   }
 
-  if (!(file.exists(sprintf("%s/OMICsdoSof/path_to_soft.txt", libPath)))) { #Solo en instalacion
-    write("",file = sprintf("%s/OMICsdoSof/path_to_soft.txt", libPath))
+  if (!(file.exists(sprintf("%s/OMICsdoSof/path_to_soft.txt", omicsdo_sof)))) { #Solo en instalacion
+    write("",file = sprintf("%s/OMICsdoSof/path_to_soft.txt", omicsdo_sof))
   }
 
-  omicsdo_sof <<- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
-
+  soft_directory <- sprintf("%s/OMICsdoSof", omicsdo_sof)
   check_packages()
 
-  downloadFastQC()
-  downloadTrimGalore()
-  downloadSTAR()
-  downloadArriba()
-  downloadSamtools()
-  #downloadBWA()
-  #downloadGATK()
-  #downloadPICARD()
-  #downloadHG38()
+  downloadFastQC(soft_directory)
+  downloadTrimGalore(soft_directory)
+  downloadSTAR(soft_directory)
+  downloadArriba(soft_directory)
+  downloadSamtools(soft_directory)
+  downloadBWA(soft_directory)
+  downloadGATK(soft_directory)
+  downloadPICARD(soft_directory)
+  downloadHG38(soft_directory)
 
 }
 
@@ -142,11 +149,12 @@ check_packages <- function() {
 #' @title downloadFastQC
 #' @description Downloads and decompresses the FastQC software
 #' @return The path where the .exe file is located
-downloadFastQC <- function() {
-  soft_directory <- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
+downloadFastQC <- function(soft_directory) {
+  #soft_directory <- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
   tryCatch(
     expr = {
-      softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo")) ))
+      #softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo")) ))
+      softwares <- readLines(sprintf("%s/path_to_soft.txt", soft_directory))
       linea_software <- grep("(?i)FastQC", softwares, ignore.case = TRUE, value = TRUE)
 
       if(length(nchar(linea_software))==0) {
@@ -192,14 +200,16 @@ downloadFastQC <- function() {
           system2(FastQC, "--help")
 
           # En caso de que la descarga haya sido exitosa, agregamos el path al archivo TXT
-          softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+          #softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+          softwares <- readLines(sprintf("%s/path_to_soft.txt", soft_directory))
 
           if(length(nchar(softwares[-grep("FastQC", softwares, ignore.case = TRUE)])) != 0 ) {
             softwares <- softwares[-grep("FastQC", softwares, ignore.case = TRUE)]
           }
           softwares_actualizado <- c(softwares, sprintf("FastQC %s", FastQC))
           # Reescribimos el archivo
-          write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+          #write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+          write(softwares_actualizado, file = sprintf("%s/path_to_soft.txt", soft_directory))
 
 
           message("FastQC download and installation completed successfully")
@@ -230,12 +240,13 @@ On the Linux command-line print:
 #' @title downloadTrimGalore
 #' @description Downloads and decompresses the TrimGalore software
 #' @return The path where the .exe file is located
-downloadTrimGalore <- function() {
+downloadTrimGalore <- function(soft_directory) {
 
-  soft_directory <- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
+  #soft_directory <- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
   tryCatch(
     expr = {
-      softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+      #softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+      softwares <- readLines(sprintf("%s/path_to_soft.txt", soft_directory))
       linea_software <- grep("(?i)TrimGalore", softwares, ignore.case = TRUE, value = TRUE)
 
       if(length(nchar(linea_software))==0) {
@@ -275,12 +286,15 @@ downloadTrimGalore <- function() {
           system2(TrimGalore, "--help")
 
           # En caso de que la descarga haya sido exitosa, agregamos el path al archivo TXT
-          softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+          #softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+          softwares <- readLines(sprintf("%s/path_to_soft.txt", soft_directory))
+
           if(length(nchar(softwares[-grep("TrimGalore", softwares, ignore.case = TRUE)])) != 0 ) {
             softwares <- softwares[-grep("TrimGalore", softwares, ignore.case = TRUE)]
           }
           softwares_actualizado <- c(softwares, sprintf("TrimGalore %s", TrimGalore))
-          write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+          #write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+          write(softwares_actualizado, file = sprintf("%s/path_to_soft.txt", soft_directory))
 
           return(TrimGalore)
         },
@@ -310,13 +324,14 @@ On the Linux command-line print:
 #' @title downloadSTAR
 #' @description Downloads and decompresses the GATK software
 #' @return The path where the .exe file is located
-downloadSTAR <- function() {
-  soft_directory <- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
+downloadSTAR <- function(soft_directory) {
+  #soft_directory <- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
 
   tryCatch(
     expr = {
 
-      softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+      #softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+      softwares <- readLines(sprintf("%s/path_to_soft.txt", soft_directory))
       #Para que sea insensible a las mayusculas o minusculas se pone el (?i)
       linea_software <- grep("(?i)STAR", softwares, ignore.case = TRUE, value = TRUE)
 
@@ -363,9 +378,11 @@ downloadSTAR <- function() {
           system2(STAR, "--help")
 
           # En caso de que la descarga haya sido exitosa, agregamos el path al archivo TXT
-          softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+          #softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+          softwares <- readLines(sprintf("%s/path_to_soft.txt", soft_directory))
           softwares_actualizado <- c(softwares, sprintf("STAR %s", STAR))
-          write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+          #write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+          write(softwares_actualizado, file = sprintf("%s/path_to_soft.txt", soft_directory))
 
           return(STAR)
         },
@@ -400,11 +417,12 @@ On the Linux command-line print:
 #' @return The path where the .exe file is located
 #' @export
 
-downloadArriba <- function() {
-  soft_directory <- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
+downloadArriba <- function(soft_directory) {
+  #soft_directory <- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
 
   tryCatch(
     expr = {
+      #softwares <- readLines(sprintf("%s/path_to_soft.txt", soft_directory))
       softwares <- readLines(sprintf("%s/path_to_soft.txt", soft_directory))
       linea_software <- grep("(?i)Arriba", softwares, ignore.case = TRUE, value = TRUE)
 
@@ -441,12 +459,12 @@ downloadArriba <- function() {
           setwd(sprintf("%s/Arriba/arriba_v2.4.0", soft_directory))
           system2("make", wait = TRUE, stdout = NULL, stderr = NULL)
 
-
           ARRIBA <<- sprintf("%s/Arriba/arriba_v2.4.0/arriba", soft_directory)
           system2(ARRIBA, "-help")
 
           # En caso de ya existir el archivo, solamente agregamos el proximo path
-          softwares <- readLines(sprintf("%s/path_to_soft.txt",soft_directory))
+          #softwares <- readLines(sprintf("%s/path_to_soft.txt",soft_directory))
+          softwares <- readLines(sprintf("%s/path_to_soft.txt", soft_directory))
           if (TRUE %in% grepl("ARRIBA", softwares, ignore.case = TRUE)) {
             # En caso de haber dado error y se descargo de nuevo, tenemos que eliminar la linea del
             # software anterior.
@@ -454,7 +472,8 @@ downloadArriba <- function() {
           }
           # Agregamos la nueva linea con el software
           softwares_actualizado <- c(softwares, sprintf("ARRIBA %s", ARRIBA))
-          write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+          #write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+          write(softwares_actualizado, file = sprintf("%s/path_to_soft.txt", soft_directory))
 
           return(ARRIBA)
         },
@@ -493,14 +512,15 @@ On the Linux command-line print:
 #' @description Downloads and decompresses the BWA software
 #' @return The path where the .exe file is
 #' @export
-downloadBWA <- function() {
-  omicsdo_sof <- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
+downloadBWA <- function(soft_directory) {
+  #omicsdo_sof <- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
+  omicsdo_sof <- soft_directory
   print(omicsdo_sof)
   #omicsdo_sof <- sprintf("%s/OMICsdoSof", Sys.getenv('R_LIBS_USER'))
 
   tryCatch(
     expr = {
-      system(sprintf('%s/BWA/usr/bin/bwa', omicsdo_sof))
+      system(sprintf('%s/BWA/usr/bin/bwa', soft_directory))
     },
     error = function(e) {
       message("Installation of BWA will now begin. Check if all the required packages are downloaded.")
@@ -527,7 +547,8 @@ downloadBWA <- function() {
       softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
       BWA <- sprintf('%s/BWA/usr/bin/bwa', omicsdo_sof)
       softwares_actualizado <- c(softwares, sprintf("BWA %s", BWA))
-      write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+      #write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+      write(softwares_actualizado, file = sprintf("%s/path_to_soft.txt", soft_directory))
 
     },
     warning = function(w) {
@@ -551,20 +572,21 @@ downloadBWA <- function() {
       system2("rpm2cpio", sprintf("%s/bwa-0.7.17-lp154.6.1.i586.rpm | cpio -D %s -idmv", bwa_dir1, bwa_dir1), wait = TRUE)
 
       #Escribo el path en el txt
-      softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+      softwares <- readLines(sprintf("%s/path_to_soft.txt", soft_directory))
       BWA <- sprintf('%s/BWA/usr/bin/bwa', omicsdo_sof)
       softwares_actualizado <- c(softwares, sprintf("BWA %s", BWA))
-      write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+      #write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+      write(softwares_actualizado, file = sprintf("%s/path_to_soft.txt", soft_directory))
 
     },
 
     finally = {
-      BWA <<- sprintf('%s/BWA/usr/bin/bwa', omicsdo_sof)
+      BWA <<- sprintf('%s/BWA/usr/bin/bwa', soft_directory)
       message("-.Message from BWA")
     }
   )
 
-  return(sprintf('%s/BWA/usr/bin/bwa', omicsdo_sof))
+  return(sprintf('%s/BWA/usr/bin/bwa', soft_directory))
 }
 
 # GATK
@@ -572,9 +594,10 @@ downloadBWA <- function() {
 #' @description Downloads and decompresses the GATK software
 #' @return The path where the .exe file is located
 
-downloadGATK <- function() {
-  omicsdo_sof <- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
+downloadGATK <- function(soft_directory) {
+  #omicsdo_sof <- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
   #omicsdo_sof <- sprintf("%s/OMICsdoSof", Sys.getenv('R_LIBS_USER'))
+  omicsdo_sof <- soft_directory
 
   if(file.exists(sprintf('%s/GATK/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar', omicsdo_sof))) {
     system(sprintf('java -jar %s/GATK/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar', omicsdo_sof))
@@ -589,10 +612,11 @@ downloadGATK <- function() {
     unzip(zipfile = file_dir, exdir = paste(omicsdo_sof, "/GATK", sep=""))
 
     #Escribo el path en el txt
-    softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+    softwares <- readLines(sprintf("%s/path_to_soft.txt", soft_directory))
     GATK <- sprintf('%s/GATK/gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar', omicsdo_sof)
     softwares_actualizado <- c(softwares, sprintf("GATK %s", GATK))
-    write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+    #write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+    write(softwares_actualizado, file = sprintf("%s/path_to_soft.txt", soft_directory))
 
   }
 
@@ -609,9 +633,10 @@ downloadGATK <- function() {
 #' @description Downloads and decompresses the PICARD software
 #' @return The path where the .exe file is located
 
-downloadPICARD <- function() {
+downloadPICARD <- function(soft_directory) {
 
-  omicsdo_sof <- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
+  #omicsdo_sof <- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
+  omicsdo_sof <- soft_directory
 
   if (file.exists(sprintf('%s/PICARD/picard-2.27.5/picard.jar', omicsdo_sof))) {
     sprintf('java -jar %s/PICARD/picard-2.27.5/picard.jar', omicsdo_sof)
@@ -630,10 +655,11 @@ downloadPICARD <- function() {
     system2("wget", args = c(URL2, "-P", dir2), wait = TRUE, stdout = NULL, stderr = NULL)
 
     #Escribo el path en el txt
-    softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+    softwares <- readLines(sprintf("%s/path_to_soft.txt", soft_directory))
     PICARD <- sprintf('%s/PICARD/picard-2.27.5/picard.jar', omicsdo_sof)
     softwares_actualizado <- c(softwares, sprintf("PICARD %s", PICARD))
-    write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+    #write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+    write(softwares_actualizado, file = sprintf("%s/path_to_soft.txt", soft_directory))
 
   }
 
@@ -648,23 +674,23 @@ downloadPICARD <- function() {
 #' @title downloadSamtools
 #' @description Downloads and decompresses the Samtools software
 #' @return The path where the .exe file is located
-downloadSamtools <- function() {
+downloadSamtools <- function(soft_directory) {
 
   tryCatch(
     {
-      system2(sprintf("%s/Samtools/samtools-1.16.1/samtools", omicsdo_sof))
+      system2(sprintf("%s/Samtools/samtools-1.16.1/samtools", soft_directory))
     },
     error = function(e) {
       message("The installation of Samtools will begin now. Check if all required packages are downloaded.")
       print(e)
 
-      dir.create(sprintf("%s/Samtools", omicsdo_sof))
-      dir <- sprintf("%s/Samtools", omicsdo_sof)
+      dir.create(sprintf("%s/Samtools", soft_directory))
+      dir <- sprintf("%s/Samtools", soft_directory)
       URL <- "https://github.com/samtools/samtools/releases/download/1.16.1/samtools-1.16.1.tar.bz2"
       system2("wget", args = c(URL, "-P", dir), wait = TRUE, stdout = NULL, stderr = NULL)
 
-      system2("bzip2", sprintf("-d %s/Samtools/samtools-1.16.1.tar.bz2", omicsdo_sof))
-      system2("tar", c("-xvf", sprintf("%s/Samtools/%s -C %s", omicsdo_sof, list.files(sprintf("%s/Samtools", omicsdo_sof)), dir)))
+      system2("bzip2", sprintf("-d %s/Samtools/samtools-1.16.1.tar.bz2", soft_directory))
+      system2("tar", c("-xvf", sprintf("%s/Samtools/%s -C %s", soft_directory, list.files(sprintf("%s/Samtools", soft_directory)), dir)))
 
       file.remove(sprintf("%s/samtools-1.16.1.tar", dir))
 
@@ -673,22 +699,26 @@ downloadSamtools <- function() {
       system(paste("cd", shQuote(samtools_dir), "&& make"))
 
       #Escribo el path en el txt
-      softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
-      Samtools <- sprintf("%s/Samtools/samtools-1.16.1/samtools", omicsdo_sof)
+      #softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+      softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", soft_directory))
+
+      Samtools <- sprintf("%s/Samtools/samtools-1.16.1/samtools", soft_directory)
       softwares_actualizado <- c(softwares, sprintf("Samtools %s", Samtools))
-      write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+      #write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+      #write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", soft_directory))
+      write(softwares_actualizado, file = sprintf("%s/path_to_soft.txt", soft_directory))
 
     },
     warning = function(w) {
       message("The installation of Samtools will begin now. Check if all required packages are downloaded.")
 
-      dir.create(sprintf("%s/Samtools", omicsdo_sof))
-      dir <- sprintf("%s/Samtools", omicsdo_sof)
+      dir.create(sprintf("%s/Samtools", soft_directory))
+      dir <- sprintf("%s/Samtools", soft_directory)
       URL <- "https://github.com/samtools/samtools/releases/download/1.16.1/samtools-1.16.1.tar.bz2"
       system2("wget", args = c(URL, "-P", dir), wait = TRUE, stdout = NULL, stderr = NULL)
 
-      system2("bzip2", sprintf("-d %s/Samtools/samtools-1.16.1.tar.bz2", omicsdo_sof))
-      system2("tar", c("-xvf", sprintf("%s/Samtools/%s -C %s", omicsdo_sof, list.files(sprintf("%s/Samtools", omicsdo_sof)), dir)))
+      system2("bzip2", sprintf("-d %s/Samtools/samtools-1.16.1.tar.bz2", soft_directory))
+      system2("tar", c("-xvf", sprintf("%s/Samtools/%s -C %s", soft_directory, list.files(sprintf("%s/Samtools", soft_directory)), dir)))
 
       file.remove(sprintf("%s/samtools-1.16.1.tar", dir))
 
@@ -697,20 +727,24 @@ downloadSamtools <- function() {
       system(paste("cd", shQuote(samtools_dir), "&& make"))
 
       #Escribo el path en el txt
-      softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
-      Samtools <- sprintf("%s/Samtools/samtools-1.16.1/samtools", omicsdo_sof)
+      #softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+      softwares <- readLines(sprintf("%s/path_to_soft.txt", soft_directory))
+
+      Samtools <- sprintf("%s/Samtools/samtools-1.16.1/samtools", soft_directory)
       softwares_actualizado <- c(softwares, sprintf("Samtools %s", Samtools))
-      write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+      #write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
+      #write(softwares_actualizado, file = sprintf("%s/OMICsdoSof/path_to_soft.txt", soft_directory))
+      write(softwares_actualizado, file = sprintf("%s/path_to_soft.txt", soft_directory))
 
     },
 
     finally = {
       message("-.Message from Samtools")
-      Samtools <<- sprintf("%s/Samtools/samtools-1.16.1/samtools", omicsdo_sof)
+      Samtools <<- sprintf("%s/Samtools/samtools-1.16.1/samtools", soft_directory)
     }
   )
 
-  return(sprintf("%s/Samtools/samtools-1.16.1/samtools", omicsdo_sof))
+  return(sprintf("%s/Samtools/samtools-1.16.1/samtools", soft_directory))
 }
 
 

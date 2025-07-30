@@ -1,16 +1,16 @@
 findClosestGene <- function(exons, contig, breakpoint, extraConditions) {
-  
+
   # find exons near breakpoint (extraConditions must define what is considered "near")
   closestExons <- exons[exons$contig == contig & extraConditions,] # find closest exon
   closestExons <- exons[exons$contig == contig & exons$geneID %in% closestExons$geneID,] # select all exons of closest gene
-  
+
   # when more than one gene found with the given name, use the closest one
   if (length(unique(closestExons$geneID)) > 1) { # more than one gene found with the given name => use the closest one
     distanceToBreakpoint <- aggregate(1:nrow(closestExons), by=list(closestExons$geneID), function(x) { min(abs(closestExons[x,"start"]-breakpoint), abs(closestExons[x,"end"]-breakpoint)) })
     closestGene <- head(distanceToBreakpoint[distanceToBreakpoint[,2] == min(distanceToBreakpoint[,2]),1], 1)
     closestExons <- closestExons[closestExons$geneID == closestGene,]
   }
-  
+
   # when no gene was found, return default values
   if (nrow(closestExons) == 0) {
     return(IRanges(max(1, breakpoint-1000), breakpoint+1000))
@@ -29,7 +29,7 @@ findExons <- function(exons, contig, geneID, direction, breakpoint, coverage, tr
       return(candidateExons)
     }
   }
-  
+
   if (transcriptSelection == "canonical") {
     candidateExons <- exons[exons$geneID == geneID & exons$contig == contig,]
   } else {
@@ -74,7 +74,7 @@ findExons <- function(exons, contig, geneID, direction, breakpoint, coverage, tr
         candidateExons <- candidateExons[encompassingExons,]
     }
   }
-  
+
   # find the consensus transcript, if there are multiple hits
   if (length(unique(candidateExons$transcript)) > 1) {
     consensusTranscript <-

@@ -10,7 +10,7 @@
 #' @import ggpubr
 #' @examples fusionStats(patients_dir, Metadata, group = "group")
 
-fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", sobrevida = TRUE, Apareados = FALSE, grupo_ids_apareados = NA) {
+fusionStats <- function(patients_dir, protein_df, Metadata = NA, group = NA, cohorte = "", sobrevida = TRUE, Apareados = FALSE, grupo_ids_apareados = NA) {
 
   ids <-  list.dirs(path = patients_dir, full.names = TRUE, recursive = FALSE)
   length(ids)
@@ -103,7 +103,44 @@ fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", s
     Stats_Fusions <- merge(Stats_Fusions, Metadata, by = "ID")
   }
 
+  colnames(Todos_FusionReport)[1] <- "ID"
   openxlsx::write.xlsx(as.data.frame(Todos_FusionReport), file = sprintf("%s/Todos-FusionReports_%s.xlsx", patients_dir, cohorte))
+  message("Todos_FusionReport DONE!")
+
+  #Anotacion de las Fusiones de interes: ----
+  fusions_report_anotated <- AnotateFusions(protein_df, fusions_report = Todos_FusionReport)
+  any(grepl("\\?", fusions_report_anotated$SeqProteinaFusion)) # deberia ser FALSE
+
+  fusions_report_anotated_domain <- GetDomains(fusions_report = fusions_report_anotated, path_dir = patients_dir)
+  fusions_report_anotated_domain_final <- fusions_report_anotated_domain[-which(fusions_report_anotated_domain$peptide_sequence == "."),]
+
+  fusions_report_anotated_domain_final$retained_tki_domains <- sapply(fusions_report_anotated_domain_final$retained_protein_domains, function(x) {
+    # Extraer todas las coincidencias de Protein_kinase_domain(X%)
+    kinase_match <- gregexpr("Protein_kinase_domain\\(\\d+%\\)", x)[[1]]
+
+    # Extraer posición de la "|"
+    pipe_match <- gregexpr("\\|", x)[[1]]
+
+    # Armar nuevo string con solo lo que nos interesa
+    keep_parts <- character(0)
+
+    if (pipe_match[1] != -1) {
+      keep_parts <- c(keep_parts, regmatches(x, list(pipe_match)))
+    }
+
+    if (kinase_match[1] != -1) {
+      keep_parts <- c(keep_parts, regmatches(x, list(kinase_match)))
+    }
+
+    # Pegar todo en el orden en que aparece
+    positions <- c(pipe_match, kinase_match)
+    ordered <- order(positions)
+    paste0(keep_parts[ordered], collapse = "")
+  })
+
+  #retained_tki_domains <- fusions_report_anotated_domain_final[, c("retained_protein_domains", "retained_tki_domains" )]
+
+  write.xlsx(fusions_report_anotated_domain_final, file = sprintf("%s/%s_TK-Fusions_Annot_Domains.xlsx", patients_dir, cohorte))
 
   # Unir gene1 y gene2 en una sola columna y mantener información de la muestra
   TFB_long <- Todos_FusionReport %>%
@@ -182,7 +219,9 @@ fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", s
 
   #Generar analisis sobrevida:
   if(sobrevida == TRUE) {
-    analisis_sobrevida(stats = Stats_Fusions, metadata = Metadata, thre = thre)
+    analisis_sobrevida(stats = Stats_Fusions, metadata = Metadata, thre = "median")
+    analisis_sobrevida(stats = Stats_Fusions, metadata = Metadata, thre = "mean")
+    analisis_sobrevida(stats = Stats_Fusions, metadata = Metadata, thre = "Q3")
   }
 
   #Calcular % de fusiones que son kinasas - Por paciente:
@@ -213,6 +252,15 @@ fusionStats <- function(patients_dir, Metadata = NA, group = NA, cohorte = "", s
 
 }
 
+#' @title boxplots_TFB_MTT.
+#' @description Generates
+#' @param stats dataframe that contains
+#' @param group must be a name of one of the columns of the metadata
+#' @param cohort string
+#' @export
+#' @import openxlsx
+#' @import ggplot2
+#' @import ggpubr
 
 boxplots_TFB_MTT <- function(stats, group, cohorte, Apareados = FALSE, grupo_ids_apareados = NA) {
 
@@ -410,6 +458,17 @@ boxplots_TFB_MTT <- function(stats, group, cohorte, Apareados = FALSE, grupo_ids
 
 }
 
+
+#' @title analisis_sobrevida
+#' @description Generates
+#' @param stats dataframe that contains
+#' @param metadata must be a name of one of the columns of the metadata
+#' @param thre string
+#' @export
+#' @import openxlsx
+#' @import survival
+#' @import survminer
+
 #Necesito que metadata tenga info de tiempo y MTT:
 #stats <- Stats_Fusions
 #metadata <- Metadata
@@ -417,10 +476,13 @@ analisis_sobrevida <- function(stats, metadata, thre = "median") {
 
   stats$Fusiones_conf_H <- as.numeric(stats$Fusiones_conf_H)
 
-  thr <- ifelse(thre == "mean",
-                mean(stats$Fusiones_conf_H),
-                median(stats$Fusiones_conf_H))
-  #thr <- mean(stats$Fusiones_conf_H)
+  if(thre == "Q3") {
+    thr <-  quantile(stats$Fusiones_conf_H, probs = 0.75, na.rm = TRUE)
+  } else {
+    thr <- ifelse(thre == "mean",
+                  mean(stats$Fusiones_conf_H),
+                  median(stats$Fusiones_conf_H))
+  }
 
   stats$group <- ifelse(stats$Fusiones_conf_H > thr, "High", "Low")
   stats$group <- factor(stats$group, levels = c("Low","High"))
@@ -447,8 +509,8 @@ analisis_sobrevida <- function(stats, metadata, thre = "median") {
 
   stats_con_tiempo$evento <- as.numeric(stats_con_tiempo$evento)
 
-  library("survival")
-  library("survminer")
+  #library("survival")
+  #library("survminer")
 
   stats_con_tiempo$group <- factor(stats_con_tiempo$group, levels = c("High","Low"))
 
@@ -461,16 +523,20 @@ analisis_sobrevida <- function(stats, metadata, thre = "median") {
   } else {
     tipo_sobrevida <- "OS"
   }
+
+  thr <- round(thr, digits = 2)
   curva_sobrevida <- ggsurvplot(fit1, data = stats_con_tiempo, size = 1,  # change line size
                                 linetype = "strata", # change line type by groups
                                 palette = c("red","blue"), # custom color palette
                                 conf.int = TRUE, # Add confidence interval
                                 pval = TRUE, # Add p-value
                                 risk.table = TRUE, # add table
-                                title = sprintf("Curva Sobrevida %s - %s - thr = %s", tipo_sobrevida, cohorte, thr)
+                                title = sprintf("%s - %s - %s = %s", tipo_sobrevida, cohorte, thre, thr)
   )
 
   print(curva_sobrevida)
   table_matrix <- table(stats_con_tiempo$group, stats_con_tiempo$evento)
   print(table_matrix)
 }
+
+

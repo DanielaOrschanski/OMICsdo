@@ -30,18 +30,20 @@ parameters <- list(
   coverageRange=list("coverageRange", "string", "0")
 )
 
+
 # print help if necessary
 args <- commandArgs(trailingOnly=T)
 
 # make sure mandatory arguments are present
-for (parameter in names(parameters))
+for (parameter in names(parameters)){
   if (length(parameters[[parameter]]) > 3 && parameters[[parameter]][[4]])
     if (!any(grepl(paste0("^--", parameter, "="), args), perl=T))
       stop(paste0("Missing mandatory argument: --", parameter))
-
-# set default values
-for (parameter in names(parameters))
+  # set default values
   assign(parameters[[parameter]][[1]], ifelse(parameters[[parameter]][[2]] == "file", "", parameters[[parameter]][[3]]))
+
+}
+
 
 # parse command-line parameters
 for (arg in args) {
@@ -68,6 +70,8 @@ for (arg in args) {
   }
 }
 
+
+library(readxl)
 fusions_report <- read_excel("/media/4tb2/Daniela/Environ/FusionesActualizado/Tiroides/CarcinomasOncociticos-PRJNA445446/SRR6888826/trimmed/SRR6888826_FusionReport.xlsx")
 
 alignmentsFile = "/media/4tb2/Daniela/Environ/FusionesActualizado/Tiroides/CarcinomasOncociticos-PRJNA445446/SRR6888826/trimmed/SRR6888826_sorted.bam"
@@ -76,8 +80,8 @@ cytobandsFile = "/home/juan/R/x86_64-pc-linux-gnu-library/4.1/OMICsdoSof/Arriba/
 proteinDomainsFile = "/home/juan/R/x86_64-pc-linux-gnu-library/4.1/OMICsdoSof/Arriba/arriba_v2.4.0/database/protein_domains_hg38_GRCh38_v2.4.0.gff3"
 sampleName = "SRR6888826"
 exonsFile = "/home/juan/R/x86_64-pc-linux-gnu-library/4.1/OMICsdoSof/HG38/Homo_sapiens.GRCh38.110.gtf"
-color1="steelblue"
-color2="indianred"
+color1="purple"
+color2="orange"
 
 
 # validate values of parameters
@@ -151,12 +155,70 @@ between <- function(value, start, end) {
   value >= start & value <= end
 }
 
+# read cytoband annotation ------------------------------------
+#cytobandsFile = "/home/juan/R/x86_64-pc-linux-gnu-library/4.1/OMICsdoSof/Arriba/arriba_v2.4.0/database/cytobands_hg38_GRCh38_v2.4.0.tsv"
+cytobands <- NULL
+
+if (cytobandsFile != "") {
+  cytobands <- read.table(cytobandsFile, header=T, colClasses=c("character", "numeric", "numeric", "character", "character"))
+  cytobands <- cytobands[order(cytobands$contig, cytobands$start, cytobands$end),]
+}
+
+# read exon annotation ------------------------------
+#exonsFile <- "/home/juan/R/x86_64-pc-linux-gnu-library/4.1/OMICsdoSof/HG38/Homo_sapiens.GRCh38.110.gtf"
+
+message("Loading annotation")
+exons <- scan(exonsFile, what=list(contig="",src="",type="",start=0,end=0,score="",strand="",frame="",attributes=""), sep="\t", comment.char="#", quote='"', multi.line=F)
+attr(exons, "row.names") <- .set_row_names(length(exons[[1]]))
+class(exons) <- "data.frame"
+exons <- exons[exons$type %in% c("exon","CDS"),c("contig","type","start","end","strand","attributes")]
+exons$contig <- removeChr(exons$contig)
+parseGtfAttribute <- function(attribute, gtf) {
+  parsed <- sub(paste0(".*", attribute, "[ =]([^;]+).*"), "\\1", gtf$attributes, perl=T)
+  failedToParse <- parsed == gtf$attributes
+  if (any(failedToParse)) {
+    warning(paste0("Failed to parse '", attribute, "' attribute of ", sum(failedToParse), " record(s)."))
+    parsed <- ifelse(failedToParse, "", parsed)
+  }
+  return(parsed)
+}
+exons$geneID <- parseGtfAttribute("gene_id", exons)
+exons$geneName <- parseGtfAttribute("gene_name", exons)
+exons$geneName <- ifelse(exons$geneName == "", exons$geneID, exons$geneName)
+exons$transcript <- parseGtfAttribute("transcript_id", exons)
+exons$exonNumber <- ifelse(rep(printExonLabels, nrow(exons)), parseGtfAttribute("exon_number", exons), "")
+
+# read protein domain annotation
+#proteinDomainsFile <- "/home/juan/R/x86_64-pc-linux-gnu-library/4.1/OMICsdoSof/Arriba/arriba_v2.4.0/database/protein_domains_hg38_GRCh38_v2.4.0.gff3"
+proteinDomains <- NULL
+if (proteinDomainsFile != "") {
+  message("Loading protein domains")
+  proteinDomains <- scan(proteinDomainsFile, what=list(contig="",src="",type="",start=0,end=0,score="",strand="",frame="",attributes=""), sep="\t", comment.char="", quote="", multi.line=F)
+  attr(proteinDomains, "row.names") <- .set_row_names(length(proteinDomains[[1]]))
+  class(proteinDomains) <- "data.frame"
+  proteinDomains$color <- parseGtfAttribute("color", proteinDomains)
+  proteinDomains$proteinDomainName <- sapply(parseGtfAttribute("Name", proteinDomains), URLdecode)
+  proteinDomains$proteinDomainID <- parseGtfAttribute("protein_domain_id", proteinDomains)
+}
+
+drawCurlyBrace <- function(left, right, top, bottom, tip) {
+  smoothness <- 20
+  x <- cumsum(exp(-seq(-2.5, 2.5, len=smoothness)^2))
+  x <- x/max(x)
+  y <- seq(top, bottom, len=smoothness)
+  lines(left+(tip-left)+x*(left-tip), y)
+  lines(tip+x*(right-tip), y)
+}
+
+####################################################################
+##### ESPECIFICO DEL ID ########################################
+###########################################################
+
 # read fusions -------------------
 #fusionsFile <- "/media/4tb2/Daniela/Environ/FusionesActualizado/Tiroides/CarcinomasOncociticos-PRJNA445446/SRR6888826/trimmed/SRR6888826_fusions.tsv"
 #sampleName <- "SRR6888826"
-
-
 fusions <- read.table(fusionsFile, stringsAsFactors=F, sep="\t", header=T, comment.char="", quote="")
+
 if (colnames(fusions)[1] == "X.gene1") { # Arriba output
   colnames(fusions)[colnames(fusions) %in% c("X.gene1", "strand1.gene.fusion.", "strand2.gene.fusion.")] <- c("gene1", "strand1", "strand2")
   fusions$display_contig1 <- sub(":[^:]*$", "", fusions$breakpoint1, perl=T)
@@ -209,51 +271,6 @@ if (nrow(fusions) == 0) {
   quit("no")
 }
 
-# read cytoband annotation ------------------------------------
-#cytobandsFile = "/home/juan/R/x86_64-pc-linux-gnu-library/4.1/OMICsdoSof/Arriba/arriba_v2.4.0/database/cytobands_hg38_GRCh38_v2.4.0.tsv"
-cytobands <- NULL
-
-if (cytobandsFile != "") {
-  cytobands <- read.table(cytobandsFile, header=T, colClasses=c("character", "numeric", "numeric", "character", "character"))
-  cytobands <- cytobands[order(cytobands$contig, cytobands$start, cytobands$end),]
-}
-
-# read exon annotation ------------------------------
-#exonsFile <- "/home/juan/R/x86_64-pc-linux-gnu-library/4.1/OMICsdoSof/HG38/Homo_sapiens.GRCh38.110.gtf"
-
-message("Loading annotation")
-exons <- scan(exonsFile, what=list(contig="",src="",type="",start=0,end=0,score="",strand="",frame="",attributes=""), sep="\t", comment.char="#", quote='"', multi.line=F)
-attr(exons, "row.names") <- .set_row_names(length(exons[[1]]))
-class(exons) <- "data.frame"
-exons <- exons[exons$type %in% c("exon","CDS"),c("contig","type","start","end","strand","attributes")]
-exons$contig <- removeChr(exons$contig)
-parseGtfAttribute <- function(attribute, gtf) {
-  parsed <- sub(paste0(".*", attribute, "[ =]([^;]+).*"), "\\1", gtf$attributes, perl=T)
-  failedToParse <- parsed == gtf$attributes
-  if (any(failedToParse)) {
-    warning(paste0("Failed to parse '", attribute, "' attribute of ", sum(failedToParse), " record(s)."))
-    parsed <- ifelse(failedToParse, "", parsed)
-  }
-  return(parsed)
-}
-exons$geneID <- parseGtfAttribute("gene_id", exons)
-exons$geneName <- parseGtfAttribute("gene_name", exons)
-exons$geneName <- ifelse(exons$geneName == "", exons$geneID, exons$geneName)
-exons$transcript <- parseGtfAttribute("transcript_id", exons)
-exons$exonNumber <- ifelse(rep(printExonLabels, nrow(exons)), parseGtfAttribute("exon_number", exons), "")
-
-# read protein domain annotation
-#proteinDomainsFile <- "/home/juan/R/x86_64-pc-linux-gnu-library/4.1/OMICsdoSof/Arriba/arriba_v2.4.0/database/protein_domains_hg38_GRCh38_v2.4.0.gff3"
-proteinDomains <- NULL
-if (proteinDomainsFile != "") {
-  message("Loading protein domains")
-  proteinDomains <- scan(proteinDomainsFile, what=list(contig="",src="",type="",start=0,end=0,score="",strand="",frame="",attributes=""), sep="\t", comment.char="", quote="", multi.line=F)
-  attr(proteinDomains, "row.names") <- .set_row_names(length(proteinDomains[[1]]))
-  class(proteinDomains) <- "data.frame"
-  proteinDomains$color <- parseGtfAttribute("color", proteinDomains)
-  proteinDomains$proteinDomainName <- sapply(parseGtfAttribute("Name", proteinDomains), URLdecode)
-  proteinDomains$proteinDomainID <- parseGtfAttribute("protein_domain_id", proteinDomains)
-}
 
 # insert dummy annotations for intergenic breakpoints:
 #Agrega en el df de exons las zonas que son integenic:
@@ -279,14 +296,6 @@ if (any(fusions$site1 == "intergenic" | fusions$site2 == "intergenic")) {
 }
 
 
-drawCurlyBrace <- function(left, right, top, bottom, tip) {
-  smoothness <- 20
-  x <- cumsum(exp(-seq(-2.5, 2.5, len=smoothness)^2))
-  x <- x/max(x)
-  y <- seq(top, bottom, len=smoothness)
-  lines(left+(tip-left)+x*(left-tip), y)
-  lines(tip+x*(right-tip), y)
-}
 
 # layout: fusion on top, circos plot on bottom left, protein domains on bottom center, statistics on bottom right
 layout(matrix(c(1,1,1,2,4,5,3,4,5), 3, 3, byrow=TRUE), widths=c(1.1, 1.2, 0.7), heights=c(1.55, 1.2, 0.25))
@@ -294,7 +303,8 @@ par(mar=c(0, 0, 0, 0))
 #plot(0, 0, type="l", xlim=c(-0.12, 1.12), ylim=c(0.4, 1.1), bty="n", xaxt="n", yaxt="n", xlab="", ylab="")
 plot(0, 0, type="l", xlim=c(-0.12, 1.12), ylim=c(0, 1.1), bty="n", xaxt="n", yaxt="n", xlab="", ylab="")
 
-#drawCoverage(left = min(exons1$left), right = max(exons1$right), y = yCoverage, coverage = coverage1,
+#drawCoverage(left = min(exons1$left), right = max(exons1$right),
+#             y = yCoverage, coverage = coverage1,
 #             start = min(exons1$start), end = max(exons1$end), color = color1)
 
 drawCoverage <- function(left, right, y, coverage, start, end, color) {
@@ -902,5 +912,54 @@ drawIdeogram <- function(adjust, left, right, y, cytobands, contig, breakpoint) 
   drawVerticalGradient(rightArcX, rep(centromereEnd, arcSteps), rightArcY, rgb(1,1,1,0.7), round(arcSteps*0.4):round(arcSteps*0.1)) # white to top on q-arm
   drawVerticalGradient(rightArcX, rep(centromereEnd, arcSteps), rightArcY, rgb(1,1,1,0.7), round(arcSteps*0.4):round(arcSteps*0.6)) # white to bottom on q-arm
   drawVerticalGradient(rightArcX, rep(centromereEnd, arcSteps), rightArcY, rgb(0,0,0,0.9), arcSteps:round(arcSteps*0.5)) # black from bottom on q-arm
+}
+
+
+drawCircos <- function(fusion, fusions, cytobands, minConfidenceForCircosPlot, circosColors) {
+  # check if Giemsa staining information is available
+  for (contig in unlist(fusions[fusion,c("contig1", "contig2")])) {
+    if (!any(cytobands$contig==contig)) {
+      warning(paste0("Circos plot cannot be drawn, because no Giemsa staining information is available for contig ", contig, "."))
+      # draw empty plots as placeholder
+      plot(0, 0, type="l", xlim=c(0, 1), ylim=c(0, 1), bty="n", xaxt="n", yaxt="n", xlab="", ylab="")
+      plot(0, 0, type="l", xlim=c(0, 1), ylim=c(0, 1), bty="n", xaxt="n", yaxt="n", xlab="", ylab="")
+      return(NULL)
+    }
+  }
+  # initialize with empty circos plot
+  circos.clear()
+  circos.initializeWithIdeogram(cytoband=cytobands, plotType=NULL)
+  # use gene names as labels or <contig>:<position> for intergenic breakpoints
+  geneLabels <- data.frame(
+    contig=c(fusions[fusion,"contig1"], fusions[fusion,"contig2"]),
+    start=c(fusions[fusion,"breakpoint1"], fusions[fusion,"breakpoint2"])
+  )
+  geneLabels$end <- geneLabels$start + 1
+  geneLabels$gene <- c(fusions[fusion,"gene1"], fusions[fusion,"gene2"])
+  geneLabels$gene <- ifelse(c(fusions[fusion,"site1"], fusions[fusion,"site2"]) == "intergenic", paste0(c(fusions[fusion,"display_contig1"], fusions[fusion,"display_contig2"]), ":", geneLabels$start), geneLabels$gene)
+  # draw gene labels
+  circos.genomicLabels(geneLabels, labels.column=4, side="outside", cex=fontSize, labels_height=0.27)
+  # draw chromosome labels in connector plot
+  for (contig in unique(cytobands$contig)) {
+    set.current.cell(track.index=2, sector.index=contig) # draw in gene label connector track (track.index=2)
+    circos.text(CELL_META$xcenter, CELL_META$ycenter, contig, cex=0.85)
+  }
+  # draw ideograms
+  circos.genomicIdeogram(cytoband=cytobands)
+  # draw arcs
+  confidenceRank <- c(low=0, medium=1, high=2)
+  for (i in c(setdiff(1:nrow(fusions), fusion), fusion)) { # draw fusion of interest last, such that its arc is on top
+    f <- fusions[i,]
+    if (any(cytobands$contig==f$contig1) && any(cytobands$contig==f$contig2)) # ignore viral contigs, because we have no cytoband information for them
+      if (minConfidenceForCircosPlot != "none" && confidenceRank[f$confidence] >= confidenceRank[minConfidenceForCircosPlot] || i==fusion)
+        circos.link(
+          f$contig1, f$breakpoint1,
+          f$contig2, f$breakpoint2,
+          lwd=2, col=ifelse(i==fusion, circosColors[f$type], getBrightColor(circosColors[f$type]))
+        )
+  }
+  # draw legend
+  plot(0, 0, type="l", xlim=c(0, 1), ylim=c(0, 1), bty="n", xaxt="n", yaxt="n", ylab="", xlab="")
+  legend(x="top", legend=names(circosColors), col=sapply(circosColors, getBrightColor), lwd=3, ncol=2, box.lty=0)
 }
 

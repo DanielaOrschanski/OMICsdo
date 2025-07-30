@@ -230,7 +230,7 @@ for (fusion in 1:nrow(fusions)) {
   # layout: fusion on top, circos plot on bottom left, protein domains on bottom center, statistics on bottom right
   layout(matrix(c(1,1,1,2,4,5,3,4,5), 3, 3, byrow=TRUE), widths=c(1.1, 1.2, 0.7), heights=c(1.55, 1.2, 0.25))
   par(mar=c(0, 0, 0, 0))
-  plot(0, 0, type="l", xlim=c(-0.12, 1.12), ylim=c(0.4, 1.1), bty="n", xaxt="n", yaxt="n", xlab="", ylab="")
+  plot(0, 0, type="l", xlim=c(-0.12, 1.12), ylim=c(0.0, 1.1), bty="n", xaxt="n", yaxt="n", xlab="", ylab="")
 
   # vertical coordinates of layers
   ySampleName <- 1.04
@@ -311,7 +311,7 @@ for (fusion in 1:nrow(fusions)) {
     }
 
     # plot coverage 1
-    rect(min(exons1$left), 0.5, max(exons1$right), yCoverage+0.3, col="#eeeeee", border=NA)
+    rect(min(exons1$left), yCoverage, max(exons1$right), yCoverage+0.3, col="#eeeeee", border=NA)
     if (squishIntrons) {
       for (exon in 1:nrow(exons1))
         if (exons1[exon,"type"] != "CDS") # don't draw coverage twice for coding regions
@@ -320,10 +320,10 @@ for (fusion in 1:nrow(fusions)) {
       drawCoverage(min(exons1$left), max(exons1$right), yCoverage, coverage1, min(exons1$start), max(exons1$end), color1)
     }
 
-    lines(c(breakpoint1, breakpoint1), c(yCoverage, yCoverage+0.3), col = "deepskyblue", lty = 2, lwd = 1)
+    lines(c(breakpoint1, breakpoint1), c(yCoverage, yCoverage+0.3), col = "purple", lty = 2, lwd = 1)
 
     # plot coverage 2
-    rect(gene2Offset+min(exons2$left), 0.5, gene2Offset+max(exons2$right), yCoverage+0.3, col="#eeeeee", border=NA)
+    rect(gene2Offset+min(exons2$left), yCoverage, gene2Offset+max(exons2$right), yCoverage+0.3, col="#eeeeee", border=NA)
     if (squishIntrons) {
       for (exon in 1:nrow(exons2))
         if (exons2[exon,"type"] != "CDS") # don't draw coverage twice for coding regions
@@ -331,7 +331,7 @@ for (fusion in 1:nrow(fusions)) {
     } else {
       drawCoverage(gene2Offset+min(exons2$left), gene2Offset+max(exons2$right), yCoverage, coverage2, min(exons2$start), max(exons2$end), color2)
     }
-    lines(c(gene2Offset+breakpoint2, gene2Offset+breakpoint2), c(yCoverage, yCoverage+0.3), col = "darkred", lty = 2, lwd = 1)
+    lines(c(gene2Offset+breakpoint2, gene2Offset+breakpoint2), c(yCoverage, yCoverage+0.3), col = "darkorange", lty = 2, lwd = 1)
 
   }
 
@@ -347,7 +347,7 @@ for (fusion in 1:nrow(fusions)) {
   }
     #2. Dibujá el área sombreada
   rect(rect_x_start, yCoverage, rect_x_end, yCoverage+0.3,
-       col = adjustcolor("lightblue", alpha.f = 0.5), border = NA)
+       col = adjustcolor("#DCD0FF", alpha.f = 0.5), border = NA)
 
   #GEN2:
   #1. Definí los extremos según la dirección
@@ -360,25 +360,29 @@ for (fusion in 1:nrow(fusions)) {
   }
   #2. Dibujá el área sombreada
   rect(gene2Offset + rect_x_start, yCoverage, gene2Offset + rect_x_end, yCoverage+0.3,
-       col = adjustcolor("lightcoral", alpha.f = 0.5), border = NA)
+       col = adjustcolor("#FFDBBB", alpha.f = 0.5), border = NA)
 
 
   #-----------------------------------------------------------------------
 
-  # plot gene 1
-  lines(c(min(exons1$left), max(exons1$right)), c(yExons, yExons), col=darkColor1)
-  for (gene in unique(exons1$geneName))
-    drawStrand(min(exons1[exons1$geneName == gene,"left"]), max(exons1[exons1$geneName == gene,"right"]), yExons, darkColor1, head(exons1[exons1$geneName == gene,"strand"],1))
-  for (exon in 1:nrow(exons1))
-    drawExon(exons1[exon,"left"], exons1[exon,"right"], yExons, color1, exons1[exon,"exonNumber"], exons1[exon,"type"])
+  # PLOT FUSION ################################
+
+  # strand 1
+  #lines(c(min(exons1$left), max(exons1$right)), c(yExons, yExons), col= color1)
+
+  #for (gene in unique(exons1$geneName))
+  #  drawStrand(min(exons1[exons1$geneName == gene,"left"]), max(exons1[exons1$geneName == gene,"right"]), yExons, darkColor1, head(exons1[exons1$geneName == gene,"strand"],1))
+  #for (exon in 1:nrow(exons1))
+  #  drawExon(exons1[exon,"left"], exons1[exon,"right"], yExons, color1, exons1[exon,"exonNumber"], exons1[exon,"type"])
 
   # plot gene 2
-  lines(c(gene2Offset, gene2Offset+max(exons2$right)), c(yExons, yExons), col=darkColor2)
-  for (gene in unique(exons2$geneName))
-    drawStrand(gene2Offset+min(exons2[exons2$geneName == gene,"left"]), gene2Offset+max(exons2[exons2$geneName == gene,"right"]), yExons, darkColor2, head(exons2[exons2$geneName == gene,"strand"],1))
-  for (exon in 1:nrow(exons2))
-    drawExon(gene2Offset+exons2[exon,"left"], gene2Offset+exons2[exon,"right"], yExons, color2, exons2[exon,"exonNumber"], exons2[exon,"type"])
+  #lines(c(gene2Offset, gene2Offset+max(exons2$right)), c(yExons, yExons), col=darkColor2)
+  #for (gene in unique(exons2$geneName))
+  #  drawStrand(gene2Offset+min(exons2[exons2$geneName == gene,"left"]), gene2Offset+max(exons2[exons2$geneName == gene,"right"]), yExons, darkColor2, head(exons2[exons2$geneName == gene,"strand"],1))
+  #for (exon in 1:nrow(exons2))
+  #  drawExon(gene2Offset+exons2[exon,"left"], gene2Offset+exons2[exon,"right"], yExons, color2, exons2[exon,"exonNumber"], exons2[exon,"type"])
 
+  yFusion = 0.3
   # plot gene1 of fusion
   if (fusions[fusion,"direction1"] == "downstream") {
     # plot strands
