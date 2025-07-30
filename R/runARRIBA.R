@@ -5,12 +5,12 @@
 
 runARRIBA <- function(patient_dir, genomeversion = "hg38", assemblyVersion = "GRCh38") {
 
-  ARRIBA <- downloadArriba()
+  ARRIBA <- downloadArriba(soft_directory)
   DB_Arriba <- sprintf("%s/database", dirname(ARRIBA))
 
-  STAR <- downloadSTAR()
+  STAR <- downloadSTAR(soft_directory)
 
-  out<- downloadHG38()
+  out<- downloadHG38(soft_directory)
   AnnotationHG38 <- out[[2]]
   FastaHG38 <- out[[1]]
   #index_dir <- out[[3]]
@@ -61,14 +61,15 @@ runARRIBA <- function(patient_dir, genomeversion = "hg38", assemblyVersion = "GR
 
   # DRAW FUSIONS: -------------------------------------------------------------------------------
   sorted_bam <- paste0(patient_dir, "/", patient_id, "_sorted.bam", sep="")
-
+  Samtools <- downloadSamtools(soft_directory)
+  
   if(!file.exists(sorted_bam)) {
 
     # Sort BAM
-    system2("samtools", args = c("sort", "-@","8", "-o", sorted_bam, bam_file))
+    system2(Samtools, args = c("sort", "-@","8", "-o", sorted_bam, bam_file))
 
     # Index sorted BAM
-    system2("samtools", args = c("index", "-@","8", sorted_bam))
+    system2(Samtools, args = c("index", "-@","8", sorted_bam))
 
   }
 
