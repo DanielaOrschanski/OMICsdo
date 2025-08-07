@@ -4,7 +4,7 @@
 \alias{downloadBWA}
 \title{downloadBWA}
 \usage{
-downloadBWA()
+downloadBWA(soft_directory)
 }
 \value{
 The path where the .exe file is

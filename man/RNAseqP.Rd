@@ -13,8 +13,10 @@ RNAseqP(
   R = "R1R2",
   trim_quality = 30,
   RunARRIBA = TRUE,
-  RunFeatureCounts = FALSE,
-  RunMIXCR = FALSE
+  RunFeatureCounts = TRUE,
+  RunMIXCR = FALSE,
+  cohort_name,
+  soft_directory
 )
 }
 \arguments{

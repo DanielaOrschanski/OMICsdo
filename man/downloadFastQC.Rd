@@ -4,7 +4,7 @@
 \alias{downloadFastQC}
 \title{downloadFastQC}
 \usage{
-downloadFastQC()
+downloadFastQC(soft_directory)
 }
 \value{
 The path where the .exe file is located

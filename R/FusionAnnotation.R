@@ -269,6 +269,10 @@ AnotateFusions <- function(protein_df, fusions_report) {
                                                            seq = fusions_report$sequence1[i],
                                                            gen = 1)
       }
+      else {
+        message("NO se encuentra el transcript id1 ni en el clean")
+        pedazo_seq1_completo <- "."
+      }
     }
 
     #lo mismo para el trasncript id 2 ----------------------------------------
@@ -299,6 +303,9 @@ AnotateFusions <- function(protein_df, fusions_report) {
         pedazo_seq2_completo <- generate_PedazoSeqCompleto(pedazo_seq = pedazo_seq2,
                                                            seq = fusions_report$sequence2[i],
                                                            gen = 2)
+      } else {
+        message("NO se encuentra el transcript id2 ni en el clean")
+        pedazo_seq2_completo <- "."
       }
     }
 

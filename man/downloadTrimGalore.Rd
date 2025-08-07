@@ -4,7 +4,7 @@
 \alias{downloadTrimGalore}
 \title{downloadTrimGalore}
 \usage{
-downloadTrimGalore()
+downloadTrimGalore(soft_directory)
 }
 \value{
 The path where the .exe file is located

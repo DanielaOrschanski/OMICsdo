@@ -4,7 +4,7 @@
 \alias{runTrimgalore}
 \title{RunTrimgalore}
 \usage{
-runTrimgalore(patient_dir, trim_quality = 20)
+runTrimgalore(patient_dir, trim_quality = 30, soft_directory)
 }
 \arguments{
 \item{patient_dir}{Path donde se encuentra el archivo R1 de formato fasta o fastq.}

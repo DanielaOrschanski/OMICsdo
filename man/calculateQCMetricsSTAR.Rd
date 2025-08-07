@@ -4,7 +4,7 @@
 \alias{calculateQCMetricsSTAR}
 \title{Calculate QC metrics - STAR}
 \usage{
-calculateQCMetricsSTAR(patients_dir, trimmed = FALSE)
+calculateQCMetricsSTAR(patients_dir, trimmed = TRUE)
 }
 \arguments{
 \item{patients_dir}{Path of the directory that contains R1 and R2 fastq files. It can be either the "trimmed" folder or the original folder.}

@@ -4,7 +4,7 @@
 #' @param trimmed kjvdfk
 #' @return metricasSTAR df with metrics from alignment
 #' @export
-calculateQCMetricsSTAR <- function(patients_dir, trimmed = FALSE) {
+calculateQCMetricsSTAR <- function(patients_dir, trimmed = TRUE) {
 
   dir_list <- list.dirs(path = patients_dir, full.names = TRUE, recursive = FALSE)
   cant_patients <- length(dir_list)
@@ -44,13 +44,13 @@ calculateQCMetricsSTAR <- function(patients_dir, trimmed = FALSE) {
 
     colnames(metricasSTAR)[p+1] <- id
   }
-  
+
   metricasST <- as.data.frame(t(metricasSTAR[5:9, ]))
   colnames(metricasST) <- metricasST[1,]
   metricasST <- metricasST[-1,]
   metricasST <- cbind(Sample = rownames(metricasST), metricasST)
   colnames(metricasST)[1] <- "ID"
-  
+
   write.xlsx(metricasST, file = sprintf("%s/MetricasQCSTAR.xlsx", patients_dir))
   return(metricasST)
 

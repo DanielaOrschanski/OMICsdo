@@ -4,7 +4,7 @@
 \alias{downloadGATK}
 \title{downloadGATK}
 \usage{
-downloadGATK()
+downloadGATK(soft_directory)
 }
 \value{
 The path where the .exe file is located

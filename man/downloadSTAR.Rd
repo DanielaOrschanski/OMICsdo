@@ -4,7 +4,7 @@
 \alias{downloadSTAR}
 \title{downloadSTAR}
 \usage{
-downloadSTAR()
+downloadSTAR(soft_directory)
 }
 \value{
 The path where the .exe file is located

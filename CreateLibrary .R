@@ -14,15 +14,26 @@ setwd("/home/juan/R/x86_64-pc-linux-gnu-library/4.1/OMICsdoSof")
 
 setwd("/media/16TBDisk/Daniela/OMICsdo")
 setwd("/media/4tb2/Daniela/Biota/PipelineBiota")
+
+withr::with_envvar(c(TMPDIR = "/media/16TBDisk/tmp_R"), {
+  devtools::build()
+})
+
+
 devtools::build()
 #devtools::load_all() #para asegurarte de que se está ejecutando correctamente
 devtools::document()
 setwd("/media/16TBDisk/Daniela/OMICsdo")
 setwd("/media/4tb2/Daniela/Biota/PipelineBiota")
+
+withr::with_envvar(c(TMPDIR = "/media/16TBDisk/tmp_R"), {
+  devtools::install()
+})
 devtools::install()
 #devtools::install_local("/home/daniela/OMICsdo_0.0.0.9000.tar.gz")
 
 library(PipelineBiota)
+library(OMICsdo)
 
 #Errores en instalacion:
 txt <- read_file("~/R/x86_64-pc-linux-gnu-library/4.1/OMICsdoSof/path_to_soft.txt")

@@ -4,7 +4,7 @@
 \alias{downloadSamtools}
 \title{downloadSamtools}
 \usage{
-downloadSamtools()
+downloadSamtools(soft_directory)
 }
 \value{
 The path where the .exe file is located

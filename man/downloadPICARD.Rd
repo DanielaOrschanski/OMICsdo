@@ -4,7 +4,7 @@
 \alias{downloadPICARD}
 \title{downloadPICARD}
 \usage{
-downloadPICARD()
+downloadPICARD(soft_directory)
 }
 \value{
 The path where the .exe file is located

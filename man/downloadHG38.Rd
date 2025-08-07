@@ -4,7 +4,7 @@
 \alias{downloadHG38}
 \title{downloadHG38}
 \usage{
-downloadHG38()
+downloadHG38(soft_directory)
 }
 \value{
 Paths of FASTA and GTF(annotation) from the genome reference.

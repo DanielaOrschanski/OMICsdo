@@ -20,7 +20,8 @@ RNAseqP <- function(patients_dir,
                     RunARRIBA = TRUE,
                     RunFeatureCounts = TRUE,
                     RunMIXCR = FALSE,
-                    cohort_name
+                    cohort_name,
+                    soft_directory
                     ) {
 
   #patients_dir <- "~/EnvironChile/Muestras"
@@ -41,7 +42,7 @@ RNAseqP <- function(patients_dir,
   }
 
   #Functions applied to each patient one by one
-  #patient <- file_list[40]
+  #patient <- file_list[11]
   for (patient in file_list) {
     print(patient)
 
@@ -65,7 +66,7 @@ RNAseqP <- function(patients_dir,
       #Returns trimmed folder inside patient's folder
       if(!file.exists(bam)) {
         TrimGalore_time <- system.time({
-        patient_dir_trim <<- runTrimgalore(patient_dir, trim_quality = trim_quality)
+        patient_dir_trim <<- runTrimgalore(patient_dir, trim_quality = trim_quality, soft_directory = soft_directory)
         })
       }
 

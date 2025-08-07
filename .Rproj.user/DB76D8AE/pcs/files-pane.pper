@@ -2,7 +2,7 @@
     "sortOrder": [
         {
             "columnIndex": 2,
-            "ascending": false
+            "ascending": true
         },
         {
             "columnIndex": 4,
@@ -13,5 +13,5 @@
             "ascending": false
         }
     ],
-    "path": "/media/16TBDisk/Daniela/OMICsdo"
+    "path": "/media/16TBDisk/Daniela"
 }

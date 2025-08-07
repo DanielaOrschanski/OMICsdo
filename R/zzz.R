@@ -1,45 +1,43 @@
 .onLoad <- function(libname, pkgname) {
+  message("OMICsdo loaded. Please run OMICsdo::setup_environment() to configure software directory.")
+}
 
-  # HOLAAAA CAMBIE ESTO""""""""""""""""
+setup_environment <- function() {
+  if (!requireNamespace("rstudioapi", quietly = TRUE)) {
+    stop("The 'rstudioapi' package is required but not installed.")
+  }
 
-  message("ESTOY EN EL ONLOAD")
-
-  libPath <- dirname(system.file(package = "OMICsdo"))
-  print(libPath)
-
-  #libPath <- Sys.getenv('R_LIBS_USER')
-
-  #omicsdo_sof <<- sprintf("%s/OMICsdoSof", dirname(system.file(package = "OMICsdo")))
-
-  #The index needs at least 30 GB of storage, so you can choose where to store it:
-  soft_directory <<- rstudioapi::selectDirectory(
+  soft_directory <- rstudioapi::selectDirectory(
     caption = "Select the folder where to store all the softwares (30 GB required)")
-  print(soft_directory)
-  omicsdo_sof <<- soft_directory
 
-  #Folder where the softwares will be saved
-  if(!(file.exists(sprintf("%s/OMICsdoSof", omicsdo_sof)))) {
-    dir.create(sprintf("%s/OMICsdoSof", omicsdo_sof))
+  if (is.null(soft_directory)) {
+    stop("No directory selected.")
   }
 
-  if (!(file.exists(sprintf("%s/OMICsdoSof/path_to_soft.txt", omicsdo_sof)))) { #Solo en instalacion
-    write("",file = sprintf("%s/OMICsdoSof/path_to_soft.txt", omicsdo_sof))
+  omicsdo_sof <<- file.path(soft_directory, "OMICsdoSof")
+
+  if (!dir.exists(omicsdo_sof)) {
+    dir.create(omicsdo_sof, recursive = TRUE)
   }
 
-  soft_directory <- sprintf("%s/OMICsdoSof", omicsdo_sof)
+  path_file <- file.path(omicsdo_sof, "path_to_soft.txt")
+  if (!file.exists(path_file)) {
+    write("", file = path_file)
+  }
+
   check_packages()
 
-  downloadFastQC(soft_directory)
-  downloadTrimGalore(soft_directory)
-  downloadSTAR(soft_directory)
-  downloadArriba(soft_directory)
-  downloadSamtools(soft_directory)
-  downloadBWA(soft_directory)
-  downloadGATK(soft_directory)
-  downloadPICARD(soft_directory)
-  downloadHG38(soft_directory)
-
+  downloadFastQC(omicsdo_sof)
+  downloadTrimGalore(omicsdo_sof)
+  downloadSTAR(omicsdo_sof)
+  downloadArriba(omicsdo_sof)
+  downloadSamtools(omicsdo_sof)
+  downloadBWA(omicsdo_sof)
+  downloadGATK(omicsdo_sof)
+  downloadPICARD(omicsdo_sof)
+  downloadHG38(omicsdo_sof)
 }
+
 
 check_packages <- function() {
 

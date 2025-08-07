@@ -4,10 +4,10 @@
 #' @param trim_quality is the minimum value of the quality of each base within the sequence that will pass the filter.
 #' @return path of the trimmed folder which contained the trimmed files and was created inside the patient folder.
 #' @export
-runTrimgalore <- function(patient_dir,  trim_quality = 20) {
+runTrimgalore <- function(patient_dir,  trim_quality = 30, soft_directory) {
 
   # Chequeamos que esta descargado TrimGalore. En caso de no estarlo, lo descarga
-  TrimGalore <- downloadTrimGalore()
+  TrimGalore <- downloadTrimGalore(soft_directory)
   patient_id <- basename(patient_dir)
   file_list <- list.files(patient_dir)
 
@@ -29,7 +29,7 @@ runTrimgalore <- function(patient_dir,  trim_quality = 20) {
     #       file_trim <- paste0(patient_dir, "/", file_list[endsWith(file_list, "val_1.fq")], sep=""))
 
     message("You have already trimmed this sample")
-    
+
     return(sprintf("%s/trimmed", patient_dir))
   } else {
     dir.create(sprintf("%s/trimmed", patient_dir))

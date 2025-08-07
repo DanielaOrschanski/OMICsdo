@@ -4,7 +4,7 @@
 \alias{downloadArriba}
 \title{downloadArriba}
 \usage{
-downloadArriba()
+downloadArriba(soft_directory)
 }
 \value{
 The path where the .exe file is located

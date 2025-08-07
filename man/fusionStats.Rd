@@ -6,6 +6,7 @@
 \usage{
 fusionStats(
   patients_dir,
+  protein_df,
   Metadata = NA,
   group = NA,
   cohorte = "",
