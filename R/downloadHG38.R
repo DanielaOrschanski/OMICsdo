@@ -3,10 +3,10 @@
 #' @return Paths of FASTA and GTF(annotation) from the genome reference.
 #' @import rstudioapi
 
-indexRefSTAR <- function(AnnotationHG38, FastaHG38) {
+indexRefSTAR <- function(soft_directory, AnnotationHG38, FastaHG38) {
 
   #softwares <- readLines(sprintf("%s/OMICsdoSof/path_to_soft.txt", dirname(system.file(package = "OMICsdo"))))
-  soft_directory <- dirname(dirname(AnnotationHG38))
+  #soft_directory <- dirname(dirname(AnnotationHG38))
   softwares <- readLines(sprintf("%s/path_to_soft.txt", soft_directory))
   linea_software <- grep("(?i)HG38Index", softwares, ignore.case = TRUE, value = TRUE)
 
@@ -176,7 +176,7 @@ downloadHG38 <- function(soft_directory) {
   linea_fasta <- grep("HG38FASTA", softwares, ignore.case = TRUE, value = TRUE)
   FastaHG38 <- strsplit(linea_fasta, split = " ")[[1]][2]
 
-  paths <- indexRefSTAR(AnnotationHG38, FastaHG38)
+  paths <- indexRefSTAR(soft_directory, AnnotationHG38, FastaHG38)
   FastaHG38 <<- paths[[1]]
   AnnotationHG38 <<- paths[[2]]
   index_dir_STAR <<- paths[[3]]
